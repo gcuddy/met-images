@@ -212,7 +212,7 @@
 				</label> -->
 				<h2>Departments</h2>
 				<button on:click={toggle}>Toggle all</button>
-				{#each options.departments as department}
+				{#each options.departments as department (department.departmentId)}
 					<label>
 						<input
 							type="checkbox"
