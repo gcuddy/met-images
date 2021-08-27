@@ -1,6 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@sveltejs/adapter-netlify': ^1.0.0-next.0
   '@sveltejs/kit': next
   '@typescript-eslint/eslint-plugin': ^4.19.0
   '@typescript-eslint/parser': ^4.19.0
@@ -14,6 +15,9 @@ specifiers:
   svelte-preprocess: ^4.0.0
   tslib: ^2.0.0
   typescript: ^4.0.0
+
+dependencies:
+  '@sveltejs/adapter-netlify': 1.0.0-next.0
 
 devDependencies:
   '@sveltejs/kit': 1.0.0-next.158_svelte@3.42.3
@@ -112,6 +116,12 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.0
     dev: true
+
+  /@sveltejs/adapter-netlify/1.0.0-next.0:
+    resolution: {integrity: sha512-CxjWlGkNyQzEB9LsXN+MvF1Z+SHRb16cNZL8sy5bUcytDcf7ETjlgKdaxks7ygWBhI/wtx4Mcxr+uIt50p8vag==}
+    dependencies:
+      toml: 3.0.0
+    dev: false
 
   /@sveltejs/kit/1.0.0-next.158_svelte@3.42.3:
     resolution: {integrity: sha512-jVpVeAFOVNOGDRDVvbWjHxco5s78OYsrCJhnEAKoOe690gkWA5Qc8FqPXo8HHiaIHKHmTP1vbrEhQ5jkX7fBAw==}
@@ -1354,6 +1364,10 @@ packages:
     dependencies:
       is-number: 7.0.0
     dev: true
+
+  /toml/3.0.0:
+    resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
+    dev: false
 
   /tslib/1.14.1:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
