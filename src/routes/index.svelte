@@ -190,6 +190,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Met</title>
+</svelte:head>
+
 <div class="wrapper flow">
 	<div class="header flow">
 		<h1>Met app</h1>
