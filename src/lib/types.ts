@@ -7,7 +7,7 @@ export interface Constituents {
 	gender: string;
 }
 
-export interface Object {
+export interface MetObject {
 	objectID: number;
 	isHighlight: boolean;
 	accessionNumber: string;

@@ -1,7 +1,9 @@
 <script lang="ts">
-	import type { Object, Constituents } from './types';
+	import { savedImages } from './stores';
 
-	export let image: Object;
+	import type { MetObject } from './types';
+
+	export let image: MetObject;
 
 	function yearAdapter(y: number) {
 		const year = y.toString();
@@ -12,14 +14,14 @@
 	}
 
 	const relevantKeys = [
+		'GalleryNumber',
 		'department',
 		'culture',
 		'period',
 		'dynasty',
 		'reign',
 		'medium',
-		'dimensions',
-		'GalleryNumber'
+		'dimensions'
 	];
 
 	// this dumps them all that aren't arrays
@@ -27,17 +29,28 @@
 
 	const camelToTitle = (s: string) =>
 		s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+
+	const handleClick = () => {
+		savedImages.update((val) => {
+			if (val.some((v) => v.objectID === image.objectID)) return val;
+			return (val = [...val, image]);
+		});
+	};
 </script>
 
 <div class="image-container">
 	<figure>
 		<div class="image-frame">
-			<a href={'https://www.metmuseum.org/art/collection/search/' + image.objectID}>
-				<img src={image.primaryImage} alt="{image.title} by {image.artistDisplayName}" />
-			</a>
+			<a href={image.primaryImage}
+				><img src={image.primaryImage} alt="{image.title} by {image.artistDisplayName}" /></a
+			>
 		</div>
 		<figcaption>
-			<h2>{image.title}</h2>
+			<h2>
+				<a href={'https://www.metmuseum.org/art/collection/search/' + image.objectID}
+					>{image.title}</a
+				>
+			</h2>
 			{#if image.artistDisplayName}
 				<p class="artist">{image.artistDisplayName}</p>
 			{/if}
@@ -48,11 +61,12 @@
 			<dl>
 				{#each relevantKeys as key}
 					{#if image[key]}
-						<dt>{camelToTitle(key)}</dt>
-						<dd>{image[key]}</dd>
+						<dt class:on-view={key === 'GalleryNumber'}>{camelToTitle(key)}</dt>
+						<dd class:on-view={key === 'GalleryNumber'}>{image[key]}</dd>
 					{/if}
 				{/each}
 			</dl>
+			<button on:click={handleClick}>Save</button>
 		</figcaption>
 	</figure>
 </div>
@@ -81,6 +95,9 @@
 		gap: 1rem;
 		justify-content: space-evenly;
 		flex-wrap: wrap;
+		margin-left: auto;
+		margin-right: auto;
+		max-width: 1200px;
 	}
 	figcaption {
 		max-width: 30ch;
@@ -102,5 +119,8 @@
 	}
 	dd {
 		font-style: italic;
+	}
+	.on-view {
+		color: var(--met-red);
 	}
 </style>
