@@ -4,6 +4,10 @@
 	import type { MetObject } from './types';
 
 	export let image: MetObject;
+	let saved = false;
+	// this isn't working...
+	// if ($savedImages.some((v) => v.objectID === image.objectID)) saved = true;
+	// $: if ($savedImages.some((v) => v.objectID === image.objectID)) saved = true;
 
 	function yearAdapter(y: number) {
 		const year = y.toString();
@@ -32,7 +36,7 @@
 
 	const handleClick = () => {
 		savedImages.update((val) => {
-			if (val.some((v) => v.objectID === image.objectID)) return val;
+			if (saved) return val;
 			return (val = [...val, image]);
 		});
 	};
@@ -66,7 +70,8 @@
 					{/if}
 				{/each}
 			</dl>
-			<button on:click={handleClick}>Save</button>
+			<!-- disabled={saved ? true : undefined} -->
+			<button on:click={handleClick}>{!saved ? 'Save' : 'Saved'}</button>
 		</figcaption>
 	</figure>
 </div>
@@ -122,5 +127,11 @@
 	}
 	.on-view {
 		color: var(--met-red);
+	}
+	.image-container {
+		padding-bottom: 2em;
+	}
+	button[disabled] {
+		opacity: 0.5;
 	}
 </style>

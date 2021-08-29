@@ -15,7 +15,7 @@
 <div class="saved-images">
 	<ul class="flow">
 		{#each $savedImages as image (image.objectID)}
-			<li animate:flip>
+			<li animate:flip={{ duration: 200 }}>
 				<div class="saved-image">
 					<img src={image.primaryImageSmall} />
 					<div class="saved-image-info">
@@ -56,6 +56,7 @@
 	svg {
 		width: 1.5rem;
 		height: 1.5rem;
+		color: #000;
 	}
 	button {
 		border: 0;
