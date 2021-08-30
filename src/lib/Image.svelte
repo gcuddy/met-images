@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { lastKey, savedImages } from './stores';
+	import { StarIcon } from 'svelte-feather-icons';
 
 	import type { MetObject } from './types';
 
@@ -87,7 +88,8 @@
 			<button
 				disabled={$savedImages.some((v) => v.objectID === image.objectID)}
 				on:click|once={handleClick}
-				>{$savedImages.some((v) => v.objectID === image.objectID) ? 'Saved' : 'Save'}</button
+				><StarIcon size=".75x" />
+				{$savedImages.some((v) => v.objectID === image.objectID) ? 'Saved' : 'Save'}</button
 			>
 		</figcaption>
 	</figure>
@@ -146,6 +148,7 @@
 		color: var(--met-red);
 	}
 	.image-container {
+		--flow-space: 1.5em;
 		padding-bottom: 2em;
 	}
 	button[disabled] {

@@ -4,6 +4,8 @@
 	import { afterUpdate, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isOutOfViewport } from '$lib/helpers';
+	import { slide } from 'svelte/transition';
+	import { Trash2Icon } from 'svelte-feather-icons';
 
 	// todo: multiple selection
 	let selectedItems = [];
@@ -38,9 +40,14 @@
 			case 'KeyX': {
 				if (activeID) {
 					event.preventDefault();
-					selectedItems = [...selectedItems, activeID];
+					if (selectedItems.includes(activeID)) {
+						selectedItems = selectedItems.filter((id) => id !== activeID);
+					} else {
+						selectedItems = [...selectedItems, activeID];
+					}
 					break;
 				}
+				break;
 			}
 			case 'Slash': {
 				event.preventDefault();
@@ -136,12 +143,15 @@
 		on:blur={() => ($disableGlobalShortcuts = false)}
 	/>
 	{#if selectedItems.length > 0}
-		<div class="saved-images__selected-actions">
+		<div transition:slide class="saved-images__selected-actions">
 			<button
 				on:click={() => {
 					$savedImages = $savedImages.filter((i) => !selectedItems.includes(i.objectID));
 					selectedItems = [];
-				}}>Delete Selected Items</button
+				}}
+				><Trash2Icon size=".75x" /> Delete {selectedItems.length} Item{selectedItems.length > 1
+					? 's'
+					: ''}</button
 			>
 		</div>
 	{/if}
@@ -166,7 +176,7 @@
 							/>
 						</div>
 					</div>
-					<div class="saved-image-info">
+					<div class="saved-image__info flow">
 						<h2><a href="/{image.objectID}">{@html image.title}</a></h2>
 						{#if image.artistDisplayName}
 							<p>{image.artistDisplayName}</p>
@@ -214,22 +224,39 @@
 	}
 	ul {
 		list-style: none;
+		padding: 0;
 	}
 	.saved-image {
 		display: flex;
 		gap: 1.5rem;
+		font-size: var(--step-0);
+		align-items: center;
+		--flow-space: var(--space-2xs);
 
 		&__icon {
 			position: relative;
+
+			&:hover {
+				img {
+					filter: blur(0.2px) brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
+				}
+			}
 		}
-	}
-	.saved-image-info {
-		flex: 1;
+		&__info {
+			flex: 1;
+
+			h2 {
+				font-size: var(--step-0);
+			}
+			p {
+				font-size: var(--step--1);
+			}
+		}
 	}
 	img {
 		border-radius: 100%;
-		width: 100px;
-		height: 100px;
+		width: 3em;
+		height: 3em;
 		object-fit: cover;
 		position: relative;
 	}
@@ -241,8 +268,8 @@
 	// }
 	.bulk-actions {
 		position: absolute;
-		width: 100px;
-		height: 100px;
+		width: 3em;
+		height: 3em;
 		margin: 0 !important;
 		z-index: 3;
 		background: transparent;

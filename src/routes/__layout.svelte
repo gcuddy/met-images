@@ -1,23 +1,35 @@
 <script lang="ts">
 	import { isLoading, savedImages } from '$lib/stores';
 	import HeaderButtons from '$lib/HeaderButtons.svelte';
-	import { fly } from 'svelte/transition';
+	import { ArchiveIcon } from 'svelte-feather-icons';
 	import '../app.css';
 </script>
+
+<svelte:head
+	><link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+		rel="stylesheet"
+	/></svelte:head
+>
 
 <main>
 	<div class="container flow">
 		<div class="header flow">
-			<h1><a href="/">Met app</a></h1>
+			<h1><a href="/">met gallery explorer</a></h1>
 		</div>
 		{#if $savedImages.length}
 			<div class="counter--desktop">
 				<a href="/saved"
-					><span>{$savedImages.length}</span> saved image{$savedImages.length > 1 ? 's' : ''}
+					><ArchiveIcon size=".75x" /> <span>{$savedImages.length}</span> saved image{$savedImages.length >
+					1
+						? 's'
+						: ''}
 				</a>
 			</div>
 			<div class="counter--mobile">
-				<a href="/saved"><span>{$savedImages.length}</span> </a>
+				<a href="/saved"><span>{$savedImages.length}</span></a>
 			</div>
 		{/if}
 		<HeaderButtons
@@ -29,26 +41,51 @@
 	<noscript> Please enable Javascript to use this app. </noscript>
 </main>
 
-<style>
+<style lang="scss">
 	main {
 		padding: 1em 1em 2em;
+	}
+
+	.header {
+		h1 {
+			font-size: var(--step-1);
+		}
+		a {
+			text-decoration: none;
+		}
+	}
+	.counter {
+		&--desktop,
+		&--mobile {
+			font-family: 'Roboto Mono', monospace;
+			a {
+				text-decoration: none;
+			}
+		}
+		&--desktop {
+		}
+		&--mobile {
+			--flow-space: 0;
+			display: none;
+			background: var(--met-red-lighter);
+			color: white;
+			z-index: 9;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+				'Open Sans', 'Helvetica Neue', sans-serif;
+			font-weight: 700;
+			filter: invert(100%);
+			a {
+				border-radius: 100%;
+				padding: 0.5rem 0.75rem;
+				display: block;
+			}
+		}
 	}
 	.counter--desktop,
 	.counter--mobile {
 		position: absolute;
 		top: 0;
 		right: 0;
-	}
-	.counter--mobile {
-		display: none;
-		padding: 0.5rem 0.75rem;
-		background: var(--met-red-lighter);
-		color: white;
-		z-index: 9;
-		border-radius: 100%;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-			'Open Sans', 'Helvetica Neue', sans-serif;
-		font-weight: 700;
 	}
 	@media screen and (max-width: 768px) {
 		.counter--desktop {

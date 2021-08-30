@@ -4,6 +4,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { getRandomItemFromArray } from '$lib/utils';
 	import { goto } from '$app/navigation';
+	import { ShuffleIcon, SettingsIcon } from 'svelte-feather-icons';
 
 	const dispatch = createEventDispatcher();
 
@@ -125,8 +126,10 @@
 
 <div class="header-buttons flow">
 	<div class="menu">
-		<button on:click={handleClick}>Get Random Image</button>
-		<button on:click={() => (showOptions = !showOptions)}>Options</button>
+		<button on:click={handleClick}><ShuffleIcon size=".75x" /> Get Random Image</button>
+		<button on:click={() => (showOptions = !showOptions)}
+			><SettingsIcon size=".75x" /> Options</button
+		>
 	</div>
 	{#if showOptions}
 		<div class="options flow" transition:slide>
