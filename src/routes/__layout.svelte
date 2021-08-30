@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { savedImages } from '$lib/stores';
-
+	import { isLoading, savedImages } from '$lib/stores';
+	import HeaderButtons from '$lib/HeaderButtons.svelte';
+	import { fly } from 'svelte/transition';
 	import '../app.css';
 </script>
 
@@ -12,18 +13,26 @@
 		{#if $savedImages.length}
 			<div class="counter--desktop">
 				<a href="/saved"
-					><span>{$savedImages.length} saved image{$savedImages.length > 1 ? 's' : ''}</span>
+					><span>{$savedImages.length}</span> saved image{$savedImages.length > 1 ? 's' : ''}
 				</a>
 			</div>
 			<div class="counter--mobile">
 				<a href="/saved"><span>{$savedImages.length}</span> </a>
 			</div>
 		{/if}
+		<HeaderButtons
+			on:loadingImage={() => ($isLoading = true)}
+			on:imageLoaded={() => ($isLoading = false)}
+		/>
 		<slot />
 	</div>
+	<noscript> Please enable Javascript to use this app. </noscript>
 </main>
 
 <style>
+	main {
+		padding: 1em 1em 2em;
+	}
 	.counter--desktop,
 	.counter--mobile {
 		position: absolute;
@@ -33,7 +42,7 @@
 	.counter--mobile {
 		display: none;
 		padding: 0.5rem 0.75rem;
-		background: var(--met-red);
+		background: var(--met-red-lighter);
 		color: white;
 		z-index: 9;
 		border-radius: 100%;

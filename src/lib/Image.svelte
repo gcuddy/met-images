@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { savedImages } from './stores';
+	import { lastKey, savedImages } from './stores';
 
 	import type { MetObject } from './types';
 
 	export let image: MetObject;
 	let saved = false;
+	let saveText = 'Save';
 	// this isn't working...
-	// if ($savedImages.some((v) => v.objectID === image.objectID)) saved = true;
+	// if ($savedImages.some((v) => v.objectID === image.objectID)) saveText = 'Saved';
 	// $: if ($savedImages.some((v) => v.objectID === image.objectID)) saved = true;
 
 	function yearAdapter(y: number) {
@@ -35,24 +36,36 @@
 		s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
 
 	const handleClick = () => {
+		addToSavedImages();
+	};
+	const addToSavedImages = () => {
 		savedImages.update((val) => {
-			if (saved) return val;
+			if ($savedImages.some((v) => v.objectID === image.objectID)) return val;
 			return (val = [...val, image]);
 		});
 	};
+
+	const handleKeydown = async (e: KeyboardEvent) => {
+		if (e.key.toLowerCase() === 's' && $lastKey !== 'g') {
+			addToSavedImages();
+		}
+	};
 </script>
+
+<!-- keyboard shortcut -->
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="image-container">
 	<figure>
 		<div class="image-frame">
-			<a href={image.primaryImage}
-				><img src={image.primaryImage} alt="{image.title} by {image.artistDisplayName}" /></a
+			<a href={image.primaryImage || image.primaryImageSmall}
+				><img src={image.primaryImageSmall} alt="{image.title} by {image.artistDisplayName}" /></a
 			>
 		</div>
-		<figcaption>
+		<figcaption class="flow">
 			<h2>
 				<a href={'https://www.metmuseum.org/art/collection/search/' + image.objectID}
-					>{image.title}</a
+					>{@html image.title}</a
 				>
 			</h2>
 			{#if image.artistDisplayName}
@@ -71,24 +84,28 @@
 				{/each}
 			</dl>
 			<!-- disabled={saved ? true : undefined} -->
-			<button on:click={handleClick}>{!saved ? 'Save' : 'Saved'}</button>
+			<button
+				disabled={$savedImages.some((v) => v.objectID === image.objectID)}
+				on:click|once={handleClick}
+				>{$savedImages.some((v) => v.objectID === image.objectID) ? 'Saved' : 'Save'}</button
+			>
 		</figcaption>
 	</figure>
 </div>
 
 <style>
 	.image-frame {
-		border-radius: 0.25rem;
-		padding: 1rem;
-		background-color: hsl(3, 54%, 97%);
+		/* border-radius: 0.25rem; */
+		/* padding: 1rem; */
+		/* background-color: hsl(3, 54%, 97%); */
 		flex-basis: 0;
 		flex-grow: 999;
 		min-width: 66%;
+		display: flex;
+		justify-content: center;
 	}
-	a {
-		margin-left: auto;
-		margin-right: auto;
-		display: block;
+	img {
+		border: 1rem solid hsl(3, 54%, 97%);
 	}
 	/* img {
 		max-width: 600px;

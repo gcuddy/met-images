@@ -1,15 +1,18 @@
 <script lang="ts">
 	import type { MetObject } from './types';
 	import { slide } from 'svelte/transition';
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { getRandomItemFromArray } from '$lib/utils';
+	import { goto } from '$app/navigation';
+
+	const dispatch = createEventDispatcher();
 
 	let changed = false;
 	let imageIds: number[];
 	let imagePromise: Promise<number[]>;
 	let showOptions = false;
 
-	import { currentImage, options } from '$lib/stores';
+	import { currentImage, disableGlobalShortcuts, lastKey, options } from '$lib/stores';
 
 	/* add in highlight/onview options
     else if (options.highlight && !json.isHighlight) {
@@ -28,7 +31,8 @@
 			`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`
 		);
 		const json: MetObject = await res.json();
-		if (!json.primaryImage) {
+		if (!json.primaryImageSmall) {
+			console.log(`Skipping ${id}: No image found.`);
 			return await randomImage();
 		} else if (!$options.departments.some((d) => d.displayName === json.department)) {
 			return await randomImage();
@@ -54,12 +58,15 @@
 		return data.objectIDs;
 	};
 	async function handleClick() {
+		await goto('/');
+		dispatch('loadingImage');
 		if (changed) {
 			console.log('new url download');
 			imageIds = await loadImages();
 			changed = false;
 		}
 		let image = await randomImage();
+		dispatch('imageLoaded');
 		console.log(image);
 		currentImage.set(image);
 	}
@@ -70,6 +77,40 @@
 			return d;
 		});
 	}
+
+	const handleKeyDown = async (e: KeyboardEvent) => {
+		if ($disableGlobalShortcuts) return;
+		if ($lastKey === 'g') {
+			switch (e.key) {
+				case 's': {
+					e.preventDefault();
+					goto(`/saved`);
+					// $lastKey = '';
+					return;
+				}
+				case 'h': {
+					e.preventDefault();
+					goto(`/`);
+					// $lastKey = '';
+					return;
+				}
+			}
+		}
+		switch (e.key) {
+			case 'r' || 'R': {
+				handleClick();
+				return;
+			}
+		}
+		// set $lastKey to e.key with a timeout
+		if (e.key === 'g') {
+			setTimeout(() => {
+				$lastKey = '';
+			}, 750);
+			$lastKey = e.key;
+		}
+	};
+
 	onMount(async () => {
 		if (localStorage.getItem('ids')) {
 			imageIds = JSON.parse(localStorage.getItem('ids'));
@@ -79,6 +120,8 @@
 		}
 	});
 </script>
+
+<svelte:window on:keydown={handleKeyDown} />
 
 <div class="header-buttons flow">
 	<div class="menu">

@@ -17,3 +17,9 @@ if (browser) {
 export const options = writable(DEFAULT_OPTIONS);
 
 export const currentImage = writable<MetObject>(null);
+
+export const isLoading = writable(false);
+
+export const lastKey = writable('');
+
+export const disableGlobalShortcuts = writable(false);
