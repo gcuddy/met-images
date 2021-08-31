@@ -12,7 +12,7 @@
 	import { artistStore } from '$lib/stores';
 	import { onMount } from 'svelte';
 	export let name;
-	import getUnicodeFlagIcon from 'country-flag-icons/unicode';
+	import getUnicodeFlagIcon from 'country-flag-icons/unicode/index.commonjs';
 	import { country_to_code, nationality_to_code } from '$lib/countries';
 	import { search } from '$lib/met-api';
 	import type { MetObject } from '$lib/types';
