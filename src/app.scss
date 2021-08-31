@@ -1,19 +1,25 @@
+@use "fonts.scss";
+
 :root {
+	--measure: 60ch;
+
 	--text: #000;
 	--met-red: #e4022b;
 	--met-red-lighter: #611e1e;
 
-	--step--2: clamp(0.91rem, 0.89rem + 0.1vw, 0.96rem);
-	--step--1: clamp(1.09rem, 1.05rem + 0.21vw, 1.2rem);
+	/* @link https://utopia.fyi/type/calculator?c=320,21,1.25,1140,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l */
+
+	--step--2: clamp(0.84rem, 0.84rem + 0.01vw, 0.84rem);
+	--step--1: clamp(1.05rem, 1.02rem + 0.15vw, 1.13rem);
 	--step-0: clamp(1.31rem, 1.24rem + 0.37vw, 1.5rem);
-	--step-1: clamp(1.58rem, 1.46rem + 0.59vw, 1.88rem);
-	--step-2: clamp(1.89rem, 1.71rem + 0.89vw, 2.34rem);
-	--step-3: clamp(2.27rem, 2.01rem + 1.29vw, 2.93rem);
-	--step-4: clamp(2.72rem, 2.36rem + 1.83vw, 3.66rem);
-	--step-5: clamp(3.27rem, 2.75rem + 2.56vw, 4.58rem);
+	--step-1: clamp(1.64rem, 1.5rem + 0.7vw, 2rem);
+	--step-2: clamp(2.05rem, 1.81rem + 1.2vw, 2.67rem);
+	--step-3: clamp(2.56rem, 2.18rem + 1.93vw, 3.55rem);
+	--step-4: clamp(3.2rem, 2.61rem + 2.99vw, 4.74rem);
+	--step-5: clamp(4.01rem, 3.11rem + 4.5vw, 6.31rem);
 }
 
-/* @link https://utopia.fyi/space/calculator?c=320,21,1.2,1140,24,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l */
+/* @link https://utopia.fyi/space/calculator?c=320,21,1.25,1140,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l */
 
 :root {
 	--fluid-min-width: 320;
@@ -121,30 +127,10 @@
 	);
 }
 
-/* Box sizing rules */
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-/* Remove default margin */
-body,
-h1,
-h2,
-h3,
-h4,
-p,
-figure,
-blockquote,
-dl,
-dd {
-	margin: 0;
-}
-
 body {
 	background-color: #f5f5f5;
-	font-family: Georgia, 'Times New Roman', Times, serif;
+	color: #111;
+	font-family: 'Fern Web', Georgia, 'Times New Roman', Times, serif;
 	overflow-x: hidden;
 	min-height: 100vh;
 }
@@ -164,16 +150,16 @@ button {
 	text-align: center;
 	cursor: pointer;
 	font-weight: 700;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-		'Open Sans', 'Helvetica Neue', sans-serif;
+	font-family: 'Fern Web', Georgia, serif;
 }
 button:active {
 	transform: scale(0.97);
 }
 
 img {
-	max-width: 100%;
+	max-width: min(55rem, 100%);
 }
+
 img[width] {
 	width: auto; /* Defer to max-width */
 }
@@ -192,13 +178,11 @@ img[src$='.svg'] {
 	margin-top: var(--flow-space, 1em);
 }
 
-/* h1,
+h1,
 h2,
 h3 {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-		'Open Sans', 'Helvetica Neue', sans-serif;
-	font-weight: 900;
-} */
+	font-family: 'Pomfret Web', Georgia, serif;
+}
 
 /* dark mode media query */
 @media (prefers-color-scheme: dark) {
@@ -211,19 +195,35 @@ h3 {
 	img {
 		filter: invert(100%);
 	}
+
+	.country {
+		filter: invert(1);
+		background: transparent;
+	}
 }
 
-/**
- * WRAPPER
- * Sets a max width, adds a consistent gutter and horizontally
- * centers the contents
- */
-.wrapper {
-	width: 97vw;
-	width: clamp(16rem, 97vw, 70rem);
-	margin-left: auto;
-	margin-right: auto;
-	padding-left: 1.5rem;
-	padding-right: 1.5rem;
-	position: relative;
+/* Typography */
+
+h1,
+h2,
+h3,
+h4 {
+	line-height: 1.3;
+}
+
+h1,
+h2 {
+	font-weight: 900;
+}
+
+h1 {
+	font-size: var(--step-2);
+}
+
+h2 {
+	font-size: var(--step-1);
+}
+
+h3 {
+	font-size: var(--step-0);
 }

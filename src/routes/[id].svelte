@@ -9,10 +9,10 @@
 </script>
 
 <script lang="ts">
-	import HeaderButtons from '$lib/HeaderButtons.svelte';
 	import Image from '$lib/Image.svelte';
 	import type { MetObject } from '$lib/types';
 	import { onMount } from 'svelte';
+	import { updateArtistStore } from '$lib/helpers';
 	export let id;
 	let image: MetObject;
 	let loadingText: HTMLElement;
@@ -23,6 +23,9 @@
 		if (res.ok) {
 			const json: MetObject = await res.json();
 			image = json;
+
+			// save artist to artist store
+			updateArtistStore(json);
 		} else {
 			console.error(`Failed to load image: ${id}`);
 			loadingText.innerText = 'No image with id {id}';

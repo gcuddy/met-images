@@ -23,3 +23,19 @@ export const isLoading = writable(false);
 export const lastKey = writable('');
 
 export const disableGlobalShortcuts = writable(false);
+
+export interface artist {
+	name: string;
+	id: string;
+	birth?: string;
+	death?: string;
+	nationality?: string;
+	gender?: string;
+	role?: string;
+	bio?: string;
+	wikidata?: string;
+	ulan?: string;
+	works?: number[];
+}
+
+export const artistStore = writable<Map<string, artist>>(new Map());

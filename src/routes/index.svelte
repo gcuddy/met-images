@@ -1,13 +1,11 @@
 <script lang="ts">
-	import HeaderButtons from '$lib/HeaderButtons.svelte';
+	import '$lib/scss/utilities/center.scss';
 
 	import { Firework } from 'svelte-loading-spinners';
 
 	import Image from '$lib/Image.svelte';
 	import { currentImage, isLoading } from '$lib/stores';
 	import { MetRed } from '$lib/constants';
-
-	// let loading = false;
 </script>
 
 <svelte:head>
@@ -15,10 +13,9 @@
 </svelte:head>
 <!-- <HeaderButtons on:loadingImage={() => (loading = true)} on:imageLoaded={() => (loading = false)} /> -->
 {#if $isLoading}
-	<Firework color={MetRed} />
+	<div class="center+">
+		<Firework color={MetRed} size="5" unit="rem" />
+	</div>
 {:else if $currentImage}
 	<Image image={$currentImage} />
 {/if}
-
-<style>
-</style>

@@ -2,17 +2,9 @@
 	import { isLoading, savedImages } from '$lib/stores';
 	import HeaderButtons from '$lib/HeaderButtons.svelte';
 	import { ArchiveIcon } from 'svelte-feather-icons';
-	import '../app.css';
+	import '../reset.css';
+	import '../app.scss';
 </script>
-
-<svelte:head
-	><link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
-		rel="stylesheet"
-	/></svelte:head
->
 
 <main>
 	<div class="container flow">
@@ -49,6 +41,7 @@
 	.header {
 		h1 {
 			font-size: var(--step-1);
+			text-transform: uppercase;
 		}
 		a {
 			text-decoration: none;
@@ -57,7 +50,7 @@
 	.counter {
 		&--desktop,
 		&--mobile {
-			font-family: 'Roboto Mono', monospace;
+			font-family: 'Fern Web', Georgia, serif;
 			a {
 				text-decoration: none;
 			}

@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { lastKey, savedImages } from './stores';
 	import { StarIcon } from 'svelte-feather-icons';
+	import slugify from 'slugify';
 
 	import type { MetObject } from './types';
 
 	export let image: MetObject;
-	let saved = false;
-	let saveText = 'Save';
-	// this isn't working...
-	// if ($savedImages.some((v) => v.objectID === image.objectID)) saveText = 'Saved';
-	// $: if ($savedImages.some((v) => v.objectID === image.objectID)) saved = true;
 
 	function yearAdapter(y: number) {
 		const year = y.toString();
@@ -29,9 +25,6 @@
 		'medium',
 		'dimensions'
 	];
-
-	// this dumps them all that aren't arrays
-	const keys = Object.keys(image).filter((k) => !Array.isArray(image[k]) && image[k]);
 
 	const camelToTitle = (s: string) =>
 		s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
@@ -53,24 +46,25 @@
 	};
 </script>
 
-<!-- keyboard shortcut -->
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="image-container">
+<div class="image">
 	<figure>
-		<div class="image-frame">
+		<div class="image__frame">
 			<a href={image.primaryImage || image.primaryImageSmall}
 				><img src={image.primaryImageSmall} alt="{image.title} by {image.artistDisplayName}" /></a
 			>
 		</div>
-		<figcaption class="flow">
+		<figcaption class="flow image__info">
 			<h2>
 				<a href={'https://www.metmuseum.org/art/collection/search/' + image.objectID}
 					>{@html image.title}</a
 				>
 			</h2>
 			{#if image.artistDisplayName}
-				<p class="artist">{image.artistDisplayName}</p>
+				<p class="artist">
+					<a href="/artist/{slugify(image.artistDisplayName)}">{image.artistDisplayName}</a>
+				</p>
 			{/if}
 			<p class="year">
 				{yearAdapter(image.objectBeginDate)}
@@ -85,6 +79,7 @@
 				{/each}
 			</dl>
 			<!-- disabled={saved ? true : undefined} -->
+			<!-- change this to unstar -->
 			<button
 				disabled={$savedImages.some((v) => v.objectID === image.objectID)}
 				on:click|once={handleClick}
@@ -95,11 +90,8 @@
 	</figure>
 </div>
 
-<style>
-	.image-frame {
-		/* border-radius: 0.25rem; */
-		/* padding: 1rem; */
-		/* background-color: hsl(3, 54%, 97%); */
+<style lang="scss">
+	.image__frame {
 		flex-basis: 0;
 		flex-grow: 999;
 		min-width: 66%;
@@ -109,34 +101,41 @@
 	img {
 		border: 1rem solid hsl(3, 54%, 97%);
 	}
-	/* img {
-		max-width: 600px;
-		height: auto;
-	} */
 	figure {
-		display: flex;
-		flex-direction: row-reverse;
+		// display: flex;
+		// flex-direction: row-reverse;
+		// justify-content: space-evenly;
+		// flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: 1fr auto;
 		gap: 1rem;
-		justify-content: space-evenly;
-		flex-wrap: wrap;
 		margin-left: auto;
 		margin-right: auto;
 		max-width: 1200px;
+
+		@media screen and (max-width: 768px) {
+			// display: flex;
+			// flex-direction: column;
+			// justify-content: center;
+			// flex-wrap: wrap;
+			grid-template-columns: 1fr;
+		}
 	}
 	figcaption {
-		max-width: 30ch;
-		flex-grow: 1;
+		max-width: 45ch;
 		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
 	}
 	dl {
 		display: grid;
 		grid-template-columns: auto 1fr;
 		grid-gap: 0.75rem 1.25rem;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-			'Open Sans', 'Helvetica Neue', sans-serif;
+		font-family: 'Fern Web', Georgia, serif;
 		max-width: 250px;
 		margin-left: auto;
 		margin-right: auto;
+		font-feature-settings: 'opsz' 12;
 	}
 	dt {
 		font-weight: 900;
@@ -147,9 +146,23 @@
 	.on-view {
 		color: var(--met-red);
 	}
-	.image-container {
+	.image {
 		--flow-space: 1.5em;
 		padding-bottom: 2em;
+
+		&__info {
+			h2 {
+				font-size: var(--step-1);
+			}
+
+			.artist {
+				font-size: var(--step-0);
+			}
+
+			.year {
+				font-size: var(--step--1);
+			}
+		}
 	}
 	button[disabled] {
 		opacity: 0.5;

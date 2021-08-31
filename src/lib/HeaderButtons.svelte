@@ -14,6 +14,7 @@
 	let showOptions = false;
 
 	import { currentImage, disableGlobalShortcuts, lastKey, options } from '$lib/stores';
+	import { updateArtistStore } from './helpers';
 
 	/* add in highlight/onview options
     else if (options.highlight && !json.isHighlight) {
@@ -32,6 +33,7 @@
 			`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`
 		);
 		const json: MetObject = await res.json();
+		updateArtistStore(json);
 		if (!json.primaryImageSmall) {
 			console.log(`Skipping ${id}: No image found.`);
 			return await randomImage();

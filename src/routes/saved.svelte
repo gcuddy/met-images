@@ -202,7 +202,7 @@
 			border: 3px solid var(--met-red);
 		}
 		input[type='checkbox']:checked::after {
-			border-color: var(--met-red-lighter);
+			border-color: var(--met-red);
 		}
 	}
 	li:focus img {
@@ -231,14 +231,14 @@
 		gap: 1.5rem;
 		font-size: var(--step-0);
 		align-items: center;
-		--flow-space: var(--space-2xs);
+		--flow-space: var(--space-3xs);
 
 		&__icon {
 			position: relative;
 
 			&:hover {
 				img {
-					filter: blur(0.2px) brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
+					filter: brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
 				}
 			}
 		}
@@ -289,17 +289,25 @@
 		-webkit-appearance: none;
 		-moz-appearance: none;
 	}
-	input[type='checkbox']:checked::after {
-		content: '';
-		background: url(/check.svg) no-repeat center;
-		background-size: auto 3.5em;
-		border: 3px solid var(--met-red);
-		position: absolute;
-		border-radius: 100%;
-		top: 0.25rem;
-		right: 0.25rem;
-		bottom: 0.25rem;
-		left: 0.25rem;
+	input[type='checkbox']:checked {
+		&:hover {
+			&::after {
+				filter: saturate(225%);
+			}
+		}
+
+		&::after {
+			content: '';
+			background: url(/check.svg) no-repeat center;
+			background-size: auto 2em;
+			border: 3px solid var(--met-red-lighter);
+			position: absolute;
+			border-radius: 100%;
+			top: 0.25rem;
+			right: 0.25rem;
+			bottom: 0.25rem;
+			left: 0.25rem;
+		}
 	}
 	svg {
 		width: 1.5rem;
