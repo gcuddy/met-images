@@ -8,8 +8,8 @@
 
 <main>
 	<div class="container flow">
-		<div class="header flow">
-			<h1><a href="/">met gallery explorer</a></h1>
+		<div class="header">
+			<h1><a href="/">met explorer</a></h1>
 		</div>
 		{#if $savedImages.length}
 			<div class="counter--desktop">
@@ -40,7 +40,7 @@
 
 	.header {
 		h1 {
-			font-size: var(--step-1);
+			// font-size: var(--step-1);
 			text-transform: uppercase;
 		}
 		a {

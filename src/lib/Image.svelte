@@ -99,7 +99,8 @@
 		justify-content: center;
 	}
 	img {
-		border: 1rem solid hsl(3, 54%, 97%);
+		border: 0.25rem solid #000;
+		border-radius: 0.25rem;
 	}
 	figure {
 		// display: flex;
@@ -112,6 +113,7 @@
 		margin-left: auto;
 		margin-right: auto;
 		max-width: 1200px;
+		padding: 0 var(--space-2xl);
 
 		@media screen and (max-width: 768px) {
 			// display: flex;
@@ -122,10 +124,14 @@
 		}
 	}
 	figcaption {
-		max-width: 45ch;
+		// max-width: 45ch;
 		text-align: center;
 		margin-left: auto;
 		margin-right: auto;
+		display: flex;
+		flex-direction: column;
+		// justify-content: center;
+		align-items: center;
 	}
 	dl {
 		display: grid;

@@ -6,18 +6,29 @@
 	import { isOutOfViewport } from '$lib/helpers';
 	import { slide } from 'svelte/transition';
 	import { Trash2Icon } from 'svelte-feather-icons';
-
+	import type { MetObject } from '$lib/types';
+	import { download } from '$lib/download';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	// todo: multiple selection
 	let selectedItems = [];
 	$: console.log(selectedItems);
 
 	let activeLookup = new Map();
+	let showDownloadPopup = false;
 	let activeID: number;
 	let items: Map<number, HTMLElement> = new Map();
 	const handleKeyboardShortcuts = (event: KeyboardEvent) => {
 		if ($disableGlobalShortcuts) return;
 		console.log(event.code);
 		switch (event.code) {
+			case 'Escape': {
+				event.preventDefault();
+				if (showDownloadPopup) {
+					showDownloadPopup = false;
+				}
+				break;
+			}
 			case 'KeyJ': {
 				event.preventDefault();
 				// this might be a stupid way to do this, but it works
@@ -99,6 +110,21 @@
 	$: filteredImages = $savedImages.filter(
 		(image) => image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1
 	);
+
+	let loadingDownload = false;
+	const downloadProgess = tweened(0, {
+		duration: 600,
+		easing: cubicOut
+	});
+	const downloadImages = async (images: MetObject[]) => {
+		loadingDownload = true;
+		let total = images.length;
+		let index = 1;
+		await download(filteredImages, (num: number) => {
+			downloadProgess.set(num);
+			if (num === 1) loadingDownload = false;
+		});
+	};
 	onMount(() => {
 		// do I want to retain this activeLookup state when coming back to it?
 		$savedImages.forEach((image) => {
@@ -154,6 +180,10 @@
 					: ''}</button
 			>
 		</div>
+	{:else}
+		<button on:click={() => (showDownloadPopup = !showDownloadPopup)}
+			>Download {filteredImages.length} items</button
+		>
 	{/if}
 	<ul class="flow">
 		{#each filteredImages as image (image.objectID)}
@@ -177,7 +207,9 @@
 						</div>
 					</div>
 					<div class="saved-image__info flow">
-						<h2><a href="/{image.objectID}">{@html image.title}</a></h2>
+						<h2>
+							<a href="/{image.objectID}">{@html image.title}</a>
+						</h2>
 						{#if image.artistDisplayName}
 							<p>{image.artistDisplayName}</p>
 						{/if}
@@ -191,6 +223,34 @@
 			</li>
 		{/each}
 	</ul>
+	{#if showDownloadPopup}
+		<div
+			class="download-container"
+			on:click|stopPropagation|self={() => (showDownloadPopup = false)}
+		>
+			<div class="download-popup flow" role="dialog" aria-labelledby="download-label">
+				<p id="download-label">Select download option.</p>
+				{#if !loadingDownload}
+					<ul class="flow">
+						<li>
+							<button on:click={() => downloadImages(filteredImages)}>Images</button>
+						</li>
+						<li>
+							<button>Markdown</button>
+						</li>
+						<li>
+							<button>CSV</button>
+						</li>
+						<li>
+							<button>JSON</button>
+						</li>
+					</ul>
+				{:else}
+					<progress value={$downloadProgess} />
+				{/if}
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -198,8 +258,8 @@
 		visibility: hidden;
 	}
 	.active {
-		img {
-			border: 3px solid var(--met-red);
+		input[type='checkbox'] {
+			border: 3px solid var(--color-secondary);
 		}
 		input[type='checkbox']:checked::after {
 			border-color: var(--met-red);
@@ -209,6 +269,7 @@
 		border: 3px solid var(--met-red);
 	}
 	.saved-images {
+		position: relative;
 		margin: 2rem auto 0;
 		max-width: 800px;
 
@@ -244,9 +305,13 @@
 		}
 		&__info {
 			flex: 1;
-
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 			h2 {
 				font-size: var(--step-0);
+				text-overflow: ellipsis;
+				overflow: hidden;
 			}
 			p {
 				font-size: var(--step--1);
@@ -260,12 +325,6 @@
 		object-fit: cover;
 		position: relative;
 	}
-	// img:hover {
-	// 	opacity: 0;
-	// 	+ .bulk-actions input {
-	// 		opacity: 1;
-	// 	}
-	// }
 	.bulk-actions {
 		position: absolute;
 		width: 3em;
@@ -288,25 +347,25 @@
 		cursor: pointer;
 		-webkit-appearance: none;
 		-moz-appearance: none;
+		-webkit-tap-highlight-color: transparent;
 	}
 	input[type='checkbox']:checked {
-		&:hover {
-			&::after {
-				filter: saturate(225%);
-			}
-		}
-
+		background: linear-gradient(135deg, var(--met-red) 0%, var(--met-red-lighter) 100%);
 		&::after {
+			filter: invert(1);
 			content: '';
 			background: url(/check.svg) no-repeat center;
-			background-size: auto 2em;
-			border: 3px solid var(--met-red-lighter);
+			background-size: auto 2.5em;
+			// border: 3px solid var(--met-red-lighter);
 			position: absolute;
 			border-radius: 100%;
 			top: 0.25rem;
 			right: 0.25rem;
 			bottom: 0.25rem;
 			left: 0.25rem;
+		}
+		&:hover {
+			background: var(--met-red);
 		}
 	}
 	svg {
@@ -318,7 +377,11 @@
 		border: 0;
 		background: transparent;
 		margin-left: auto;
+		@media screen and (max-width: 768px) {
+			display: none;
+		}
 	}
+
 	.saved-images__selected-actions {
 		position: sticky;
 		top: 1rem;
@@ -327,6 +390,44 @@
 			display: block;
 			margin-left: auto;
 			margin-right: auto;
+			background: linear-gradient(145deg, var(--met-red), var(--met-red-lighter));
+			font-size: var(--step--1);
+
+			&:hover {
+				background: var(--met-red);
+			}
 		}
+	}
+	// might be a more accessible way to do this...
+	.download-container {
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+		top: 0;
+		left: 0;
+		background: rgba(0, 0, 0, 0.08);
+		z-index: 9;
+	}
+	.download-popup {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: linear-gradient(145deg, var(--met-red), var(--met-red-lighter));
+		padding: 2rem;
+		border-radius: 1rem;
+		font-size: var(--step-0);
+		color: #fff;
+		button {
+			font-size: var(--step-0);
+			background: rgba(255, 255, 255, 0.15);
+			&:hover {
+				background: rgba(255, 255, 255, 0.1);
+			}
+		}
+	}
+	progress {
+		display: block;
+		width: 100%;
 	}
 </style>
