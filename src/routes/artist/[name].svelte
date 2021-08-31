@@ -12,8 +12,8 @@
 	import { artistStore } from '$lib/stores';
 	import { onMount } from 'svelte';
 	export let name;
-	import getUnicodeFlagIcon from 'country-flag-icons/unicode/index.commonjs';
-	import { country_to_code, nationality_to_code } from '$lib/countries';
+	// import getUnicodeFlagIcon from 'country-flag-icons/unicode/index.js';
+	// import { country_to_code, nationality_to_code } from '$lib/countries';
 	import { search } from '$lib/met-api';
 	import type { MetObject } from '$lib/types';
 
@@ -26,8 +26,8 @@
 	let hasMore = false;
 	let index = 0;
 
-	const countryCode =
-		nationality_to_code[artist?.nationality] || country_to_code[artist?.nationality];
+	// const countryCode =
+	// 	nationality_to_code[artist?.nationality] || country_to_code[artist?.nationality];
 
 	const fetchData = async (id: number) => {
 		const res = await fetch(
@@ -86,9 +86,9 @@
 		<h2>{artist?.name || name}</h2>
 		{#if artist?.nationality}
 			<p>
-				<span class="country">
+				<!-- <span class="country">
 					{countryCode && `${getUnicodeFlagIcon(countryCode) || ''}`}
-				</span>
+				</span> -->
 				{artist?.nationality}
 			</p>
 		{/if}
