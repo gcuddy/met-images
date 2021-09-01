@@ -185,7 +185,7 @@
 			>Download {filteredImages.length} items</button
 		>
 	{/if}
-	<ul class="flow">
+	<ul class="flow" class:selected-items={selectedItems.length}>
 		{#each filteredImages as image (image.objectID)}
 			<li animate:flip={{ duration: 200 }} bind:this={items[image.objectID]}>
 				<div class="saved-image">
@@ -429,5 +429,18 @@
 	progress {
 		display: block;
 		width: 100%;
+	}
+	ul.selected-items {
+		input[type='checkbox']:not(:checked)::after {
+			content: '';
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			background: transparent;
+			top: 0;
+			left: 0;
+			border-radius: 100%;
+			border: 0.5rem solid red;
+		}
 	}
 </style>

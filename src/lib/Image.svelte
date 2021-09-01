@@ -113,7 +113,9 @@
 		margin-left: auto;
 		margin-right: auto;
 		max-width: 1200px;
-		padding: 0 var(--space-2xl);
+		@media screen and (min-width: 768px) {
+			padding: 0 var(--space-2xl);
+		}
 
 		@media screen and (max-width: 768px) {
 			// display: flex;

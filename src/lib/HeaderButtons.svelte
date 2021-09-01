@@ -62,6 +62,7 @@
 	};
 	async function handleClick() {
 		await goto('/');
+		// I'd like to make this go to the /id page eventually, so that the browser back button works etc
 		dispatch('loadingImage');
 		if (changed) {
 			console.log('new url download');
