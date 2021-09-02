@@ -1,8 +1,8 @@
 import { writable } from 'svelte/store';
 import type { MetObject } from './types';
 import { DEFAULT_OPTIONS } from './options';
-import { v4 as uuidv4 } from 'uuid';
-
+import pkg from 'uuid';
+const { v4 } = pkg;
 import { browser } from '$app/env';
 
 //get rid of local storage thing
