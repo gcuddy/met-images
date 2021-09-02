@@ -1,8 +1,8 @@
 import { writable } from 'svelte/store';
 import type { MetObject } from './types';
 import { DEFAULT_OPTIONS } from './options';
-import pkg from 'uuid';
-const { v4 } = pkg;
+import uuid from 'uuid';
+const { v4 } = uuid;
 import { browser } from '$app/env';
 
 //get rid of local storage thing
@@ -51,7 +51,7 @@ function notificationStore() {
 
 	const notify = (message: string) =>
 		update((val) => {
-			const id = uuidv4();
+			const id = v4();
 			const newVal = [...val, { message, id }];
 			//settimeout to remove new notification after 3 seconds
 			setTimeout(() => {
