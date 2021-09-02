@@ -1,4 +1,5 @@
 <script context="module">
+	export const prerender = true;
 	export async function load({ page, fetch, session, context }) {
 		return {
 			props: {
@@ -13,9 +14,11 @@
 	import type { MetObject } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { updateArtistStore } from '$lib/helpers';
+	import Firework from 'svelte-loading-spinners/dist/ts/Firework.svelte';
+	import { MetRed } from '$lib/constants';
 	export let id;
 	let image: MetObject;
-	let loadingText: HTMLElement;
+	let loadingText: HTMLDivElement;
 	onMount(async () => {
 		const res = await fetch(
 			`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`
@@ -28,6 +31,7 @@
 			updateArtistStore(json);
 		} else {
 			console.error(`Failed to load image: ${id}`);
+			// loadingText.empty();
 			loadingText.innerText = 'No image with id {id}';
 		}
 	});
@@ -36,5 +40,7 @@
 {#if image}
 	<Image {image} />
 {:else}
-	<p bind:this={loadingText}>Loading...</p>
+	<div bind:this={loadingText} class="center+">
+		<Firework color={MetRed} size="5" unit="rem" />
+	</div>
 {/if}

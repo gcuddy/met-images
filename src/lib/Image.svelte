@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { lastKey, savedImages } from './stores';
+	import { lastKey, notifications, options, savedImages } from './stores';
 	import { StarIcon } from 'svelte-feather-icons';
 	import slugify from 'slugify';
 
@@ -34,7 +34,8 @@
 	};
 	const addToSavedImages = () => {
 		savedImages.update((val) => {
-			if ($savedImages.some((v) => v.objectID === image.objectID)) return val;
+			if (val.some((v) => v.objectID === image.objectID))
+				return val.filter((v) => v.objectID !== image.objectID);
 			return (val = [...val, image]);
 		});
 	};
@@ -43,6 +44,18 @@
 		if (e.key.toLowerCase() === 's' && $lastKey !== 'g') {
 			addToSavedImages();
 		}
+	};
+	const changeDepartment = (department: string) => {
+		options.update((val) => {
+			return {
+				...val,
+				departments: val.departments.map((v) => {
+					v.displayName === department ? (v.checked = true) : (v.checked = false);
+					return v;
+				})
+			};
+		});
+		notifications.notify(`Now only showing images from department: ${department}`);
 	};
 </script>
 
@@ -74,16 +87,36 @@
 				{#each relevantKeys as key}
 					{#if image[key]}
 						<dt class:on-view={key === 'GalleryNumber'}>{camelToTitle(key)}</dt>
-						<dd class:on-view={key === 'GalleryNumber'}>{image[key]}</dd>
+						{#if key === 'department'}
+							<dd><button on:click={() => changeDepartment(image[key])}>{image[key]}</button></dd>
+						{:else if key === 'culture'}
+							<dd><a sveltekit:prefetch href="culture/{image[key]}"> {image[key]}</a></dd>
+						{:else}
+							<dd class:on-view={key === 'GalleryNumber'}>{image[key]}</dd>
+						{/if}
 					{/if}
 				{/each}
 			</dl>
 			<!-- disabled={saved ? true : undefined} -->
 			<!-- change this to unstar -->
-			<button
-				disabled={$savedImages.some((v) => v.objectID === image.objectID)}
-				on:click|once={handleClick}
-				><StarIcon size=".75x" />
+			<!-- 				disabled={$savedImages.some((v) => v.objectID === image.objectID)}
+ -->
+			<button class="save-button" on:click={handleClick}
+				><svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill={$savedImages.some((v) => v.objectID === image.objectID) ? 'yellow' : 'none'}
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="feather feather-star"
+					><polygon
+						points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+					/></svg
+				>
 				{$savedImages.some((v) => v.objectID === image.objectID) ? 'Saved' : 'Save'}</button
 			>
 		</figcaption>
@@ -108,7 +141,7 @@
 		// justify-content: space-evenly;
 		// flex-wrap: wrap;
 		display: grid;
-		grid-template-columns: 1fr auto;
+		grid-template-columns: 2fr 1fr;
 		gap: 1rem;
 		margin-left: auto;
 		margin-right: auto;
@@ -126,7 +159,7 @@
 		}
 	}
 	figcaption {
-		// max-width: 45ch;
+		max-width: 40ch;
 		text-align: center;
 		margin-left: auto;
 		margin-right: auto;
@@ -150,6 +183,16 @@
 	}
 	dd {
 		font-style: italic;
+		button {
+			background: none;
+			color: inherit;
+			padding: 0;
+			margin: 0;
+			display: inline;
+			text-align: left;
+			font-weight: normal;
+			text-decoration: underline;
+		}
 	}
 	.on-view {
 		color: var(--met-red);
@@ -174,5 +217,15 @@
 	}
 	button[disabled] {
 		opacity: 0.5;
+	}
+	.save-button {
+		display: flex;
+		align-items: baseline;
+		svg {
+			align-self: center;
+			width: 0.9em;
+			height: 0.9em;
+			margin-inline-end: var(--space-3xs);
+		}
 	}
 </style>

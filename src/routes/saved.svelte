@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import { disableGlobalShortcuts, savedImages } from '$lib/stores';
+	import { artistStore, disableGlobalShortcuts, savedImages } from '$lib/stores';
 	import { afterUpdate, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isOutOfViewport } from '$lib/helpers';
-	import { slide } from 'svelte/transition';
-	import { Trash2Icon } from 'svelte-feather-icons';
+	import { fly, slide, fade } from 'svelte/transition';
+	import { FilterIcon, Trash2Icon } from 'svelte-feather-icons';
 	import type { MetObject } from '$lib/types';
 	import { download } from '$lib/download';
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import { MetRed } from '$lib/constants';
+	import { Jumper } from 'svelte-loading-spinners';
+	import Filter from '$lib/Filter.svelte';
+	import Search from '$lib/Search.svelte';
+	import slugify from 'slugify';
+
 	// todo: multiple selection
 	let selectedItems = [];
 	$: console.log(selectedItems);
@@ -106,21 +112,46 @@
 
 	let searchInput: HTMLInputElement;
 	let searchTerm = '';
+	let filteredImages = $savedImages.slice();
 	$: console.log(searchTerm);
-	$: filteredImages = $savedImages.filter(
-		(image) => image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1
-	);
+	// $: filteredImages = $savedImages.filter(
+	// 	(image) =>
+	// 		image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
+	// 		image.artistDisplayName.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1
+	// );
+	function handleShiftSelect(event: MouseEvent, id: number) {
+		if (event.shiftKey) {
+			event.preventDefault();
+			let index = filteredImages.findIndex((image) => image.objectID === id);
+			let selectedBeforeIndex = [...filteredImages.slice(0, index)]
+				.reverse()
+				.findIndex((image) => selectedItems.includes(image.objectID));
+			var count = filteredImages.slice(0, index).length;
+			selectedBeforeIndex =
+				selectedBeforeIndex >= 0 ? count - selectedBeforeIndex : selectedBeforeIndex;
+			if (index > selectedBeforeIndex) {
+				// items before last selected
+				let itemsBefore = [...selectedItems.slice(0, selectedBeforeIndex)];
+
+				let selectedAfterIndex = [...filteredImages.slice(index + 1)];
+			}
+			// let last = selectedItems[selectedItems.length - 1];
+			// let lastSelectedIndex = filteredImages.findIndex((image) => image.objectID === last);
+			// if (index > lastSelectedIndex) {
+			// 	console.log('true');
+			// }
+		}
+	}
 
 	let loadingDownload = false;
 	const downloadProgess = tweened(0, {
 		duration: 600,
 		easing: cubicOut
 	});
+	let downloadPopup: HTMLElement;
 	const downloadImages = async (images: MetObject[]) => {
 		loadingDownload = true;
-		let total = images.length;
-		let index = 1;
-		await download(filteredImages, (num: number) => {
+		await download(images, (num: number) => {
 			downloadProgess.set(num);
 			if (num === 1) loadingDownload = false;
 		});
@@ -150,6 +181,8 @@
 <!-- keyboard shortcut for navigation -->
 <svelte:window on:keydown={handleKeyboardShortcuts} />
 
+<!-- TODO: add filter button (category, etc) and "Collections" feature to add works to custom collections -->
+
 <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
 	<symbol id="bin-icon" viewBox="0 0 50 50">
 		<path
@@ -159,6 +192,8 @@
 	</symbol>
 </svg>
 <div class="saved-images flow">
+	<Search bind:searchTerm bind:searchInput bind:filteredImages />
+	<!--
 	<input
 		class="saved-images__search"
 		type="text"
@@ -167,25 +202,55 @@
 		placeholder="Search"
 		on:focus={() => ($disableGlobalShortcuts = true)}
 		on:blur={() => ($disableGlobalShortcuts = false)}
-	/>
-	{#if selectedItems.length > 0}
-		<div transition:slide class="saved-images__selected-actions">
+	/> -->
+
+	<ul class="saved-images-list flow" class:selected-items={selectedItems.length}>
+		<!-- {#if selectedItems.length > 0}
+			<div transition:fly class="saved-images__selected-menu">
+				<div>
+					<div class="saved-images__selected-actions">
+						<button
+							on:click={() => {
+								$savedImages = $savedImages.filter((i) => !selectedItems.includes(i.objectID));
+								selectedItems = [];
+							}}
+							><Trash2Icon size=".75x" /> Delete {selectedItems.length} Item{selectedItems.length >
+							1
+								? 's'
+								: ''}</button
+						>
+					</div>
+				</div>
+			</div>
+		{/if} -->
+		<div class="list-actions" class:selected={selectedItems.length > 0}>
 			<button
-				on:click={() => {
-					$savedImages = $savedImages.filter((i) => !selectedItems.includes(i.objectID));
-					selectedItems = [];
-				}}
-				><Trash2Icon size=".75x" /> Delete {selectedItems.length} Item{selectedItems.length > 1
-					? 's'
-					: ''}</button
+				class="list-actions__download"
+				on:click={() => (showDownloadPopup = !showDownloadPopup)}
+				style="--flow-space: 0;"
+				>Download {selectedItems.length || filteredImages.length} items</button
 			>
+			{#if selectedItems.length > 0}
+				<button class="list-actions__toggle" transition:fade on:click={() => (selectedItems = [])}
+					>Un-select items</button
+				>
+				<button
+					transition:fade
+					on:click={() => {
+						$savedImages = $savedImages.filter((i) => !selectedItems.includes(i.objectID));
+						selectedItems = [];
+					}}
+					><Trash2Icon size=".75x" /> Delete {selectedItems.length} Item{selectedItems.length > 1
+						? 's'
+						: ''}</button
+				>
+			{/if}
+			<!-- <select>
+				<option>All</option>
+				<option>Selected</option>
+			</select> -->
+			<Filter bind:filteredImages />
 		</div>
-	{:else}
-		<button on:click={() => (showDownloadPopup = !showDownloadPopup)}
-			>Download {filteredImages.length} items</button
-		>
-	{/if}
-	<ul class="flow" class:selected-items={selectedItems.length}>
 		{#each filteredImages as image (image.objectID)}
 			<li animate:flip={{ duration: 200 }} bind:this={items[image.objectID]}>
 				<div class="saved-image">
@@ -203,6 +268,8 @@
 								type="checkbox"
 								bind:group={selectedItems}
 								value={image.objectID}
+								on:click={(e) => handleShiftSelect(e, image.objectID)}
+								tabindex="-1"
 							/>
 						</div>
 					</div>
@@ -211,7 +278,9 @@
 							<a href="/{image.objectID}">{@html image.title}</a>
 						</h2>
 						{#if image.artistDisplayName}
-							<p>{image.artistDisplayName}</p>
+							<p class="artist">
+								<a href="/artist/{slugify(image.artistDisplayName)}">{image.artistDisplayName}</a>
+							</p>
 						{/if}
 					</div>
 					<button
@@ -228,12 +297,26 @@
 			class="download-container"
 			on:click|stopPropagation|self={() => (showDownloadPopup = false)}
 		>
-			<div class="download-popup flow" role="dialog" aria-labelledby="download-label">
-				<p id="download-label">Select download option.</p>
+			<div
+				class="download-popup flow"
+				role="dialog"
+				aria-labelledby="download-label"
+				bind:this={downloadPopup}
+			>
 				{#if !loadingDownload}
+					<button class="close" on:click={() => (showDownloadPopup = false)}>Close</button>
+					<p id="download-label">Select download option.</p>
+
 					<ul class="flow">
 						<li>
-							<button on:click={() => downloadImages(filteredImages)}>Images</button>
+							<button
+								on:click={() =>
+									downloadImages(
+										selectedItems.length > 0
+											? $savedImages.filter((s) => selectedItems.includes(s.objectID))
+											: filteredImages
+									)}>Images</button
+							>
 						</li>
 						<li>
 							<button>Markdown</button>
@@ -245,8 +328,15 @@
 							<button>JSON</button>
 						</li>
 					</ul>
-				{:else}
-					<progress value={$downloadProgess} />
+				{:else if !$downloadProgess}
+					<p id="download-label">Downloading images...</p>
+					<Jumper color={MetRed} size="3" unit="em" />
+				{:else if $downloadProgess}
+					<div class="download-progress">
+						<p id="download-label">Zipping up...</p>
+						<p>{Math.round($downloadProgess * 100)}%</p>
+						<progress value={$downloadProgess} />
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -254,15 +344,88 @@
 </div>
 
 <style lang="scss">
+	.list-actions {
+		position: relative;
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		button {
+			background: transparent;
+			color: #000;
+			padding: 0;
+			padding-top: var(--space-3xs-2xs);
+		}
+
+		.filter {
+		}
+
+		&__toggle {
+			// text-indent: -9999px;
+			// position: absolute;
+			// left: -2rem;
+			// height: 1em;
+			// width: 1em;
+			// background-color: white;
+			// z-index: 1;
+			// border-radius: 100%;
+			// padding: 0;
+			// /* padding-top: var(--space-3xs-2xs); */
+			// top: calc(50% - var(--space-3xs-2xs));
+			// &:hover {
+			// 	background: revert !important;
+			// }
+			// &::before {
+			// 	background: url(/assets/x-circle.svg) no-repeat center/100%;
+			// 	position: absolute;
+			// 	top: 0;
+			// 	left: 0;
+			// 	content: '';
+			// 	width: 1em;
+			// 	height: 1em;
+			// }
+		}
+		&.selected {
+			position: sticky;
+			top: var(--space-3xs);
+			z-index: 9;
+			// background: linear-gradient(135deg, var(--met-red), var(--met-red-lighter));
+			color: #fff;
+
+			.list-actions {
+				&__download {
+					// position: absolute;
+					top: 0;
+					right: 0;
+					// padding: 0.5rem;
+					// background: rgba(0, 0, 0, 0.5);
+				}
+			}
+		}
+	}
 	.hidden {
 		visibility: hidden;
 	}
 	.active {
 		input[type='checkbox'] {
 			border: 3px solid var(--color-secondary);
+			&::before {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: -1rem;
+				left: calc(-1 * var(--space-xs));
+				border-radius: 100%;
+				width: 6px;
+				height: 6px;
+				background: var(--met-red);
+				pointer-events: none;
+				// add arrow here
+			}
 		}
-		input[type='checkbox']:checked::after {
-			border-color: var(--met-red);
+		input[type='checkbox']:checked {
+			::after {
+				border-color: var(--met-red);
+			}
 		}
 	}
 	li:focus img {
@@ -272,6 +435,18 @@
 		position: relative;
 		margin: 2rem auto 0;
 		max-width: 800px;
+
+		&-list {
+			// position: relative;
+			&::before {
+				position: absolute;
+				content: '';
+				width: 100%;
+				background: linear-gradient(45deg, var(--met-red), var(--met-red-lighter));
+				height: 1px;
+				z-index: 10;
+			}
+		}
 
 		&__search {
 			width: 80%;
@@ -298,8 +473,19 @@
 			position: relative;
 
 			&:hover {
-				img {
-					filter: brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
+				// img {
+				// 	filter: brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
+				// }
+				input[type='checkbox']:not(:checked)::after {
+					content: '';
+					position: absolute;
+					width: 100%;
+					height: 100%;
+					background: rgba(var(--rgb-light-gray), 0.8);
+					top: 0;
+					left: 0;
+					border-radius: 100%;
+					border: 0.5rem solid red;
 				}
 			}
 		}
@@ -315,6 +501,9 @@
 			}
 			p {
 				font-size: var(--step--1);
+			}
+			.artist a {
+				text-decoration: none;
 			}
 		}
 	}
@@ -382,21 +571,39 @@
 		}
 	}
 
-	.saved-images__selected-actions {
-		position: sticky;
+	.saved-images__selected-menu {
+		position: fixed;
 		top: 1rem;
-		background: transparent;
+		background: linear-gradient(145deg, var(--met-red), var(--met-red-lighter));
+		padding: 2rem;
+		border-radius: 1rem;
+		width: 20rem;
+		z-index: 10;
+		margin-left: auto;
+		margin-right: auto;
+		> div {
+			position: sticky;
+		}
 		button {
 			display: block;
 			margin-left: auto;
 			margin-right: auto;
-			background: linear-gradient(145deg, var(--met-red), var(--met-red-lighter));
+			background: rgba(255, 255, 255, 0.1);
 			font-size: var(--step--1);
 
 			&:hover {
 				background: var(--met-red);
 			}
 		}
+	}
+	.saved-images__selected-actions {
+		position: absolute;
+		top: 1rem;
+		left: 0;
+		right: 0;
+		width: 20rem;
+		margin-left: auto;
+		margin-right: auto;
 	}
 	// might be a more accessible way to do this...
 	.download-container {
@@ -406,31 +613,76 @@
 		top: 0;
 		left: 0;
 		background: rgba(0, 0, 0, 0.08);
-		z-index: 9;
+		z-index: 9999;
 	}
 	.download-popup {
 		position: fixed;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		background: linear-gradient(145deg, var(--met-red), var(--met-red-lighter));
+		background: linear-gradient(145deg, rgb(var(--rgb-light-gray)), rgb(var(--rgb-light-accent)));
 		padding: 2rem;
 		border-radius: 1rem;
 		font-size: var(--step-0);
-		color: #fff;
+		color: var(--text);
+		z-index: 9;
+		width: 20rem;
+
+		.close {
+			text-indent: -9999px;
+			position: absolute;
+			top: -8px;
+			left: -8px;
+			height: 1em;
+			width: 1em;
+			background-color: white;
+			z-index: 1;
+			border-radius: 100%;
+			padding: 0;
+			&:hover {
+				background: revert !important;
+			}
+			&::before {
+				background: url(/assets/x-circle.svg) no-repeat center/100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				content: '';
+				width: 1em;
+				height: 1em;
+			}
+		}
 		button {
 			font-size: var(--step-0);
-			background: rgba(255, 255, 255, 0.15);
+			color: var(--text);
+			background: rgba(255, 255, 255, 0.25);
 			&:hover {
-				background: rgba(255, 255, 255, 0.1);
+				background: rgba(255, 255, 255, 0.5);
 			}
 		}
 	}
 	progress {
 		display: block;
 		width: 100%;
+		border-radius: 0.25rem;
 	}
 	ul.selected-items {
+		img {
+			// filter: brightness(1.1) hue-rotate(5deg) opacity(0.9) saturate(1.3) sepia(0.4);
+		}
+		.saved-image__icon:hover {
+			input[type='checkbox']:not(:checked)::after {
+				content: '';
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background: rgba(var(--rgb-light-gray), 0.8);
+				top: 0;
+				left: 0;
+				border-radius: 100%;
+				border: 0.5rem solid red;
+			}
+		}
 		input[type='checkbox']:not(:checked)::after {
 			content: '';
 			position: absolute;

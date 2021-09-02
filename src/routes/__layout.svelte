@@ -1,11 +1,20 @@
 <script lang="ts">
-	import { isLoading, savedImages } from '$lib/stores';
+	import { isLoading, notifications, savedImages } from '$lib/stores';
 	import HeaderButtons from '$lib/HeaderButtons.svelte';
 	import { ArchiveIcon } from 'svelte-feather-icons';
 	import '../reset.css';
 	import '../app.scss';
+	import Notifications from '$lib/Notifications.svelte';
 </script>
 
+{#if $savedImages.length}
+	<div class="counter--mobile">
+		<a href="/saved"><span>{$savedImages.length}</span></a>
+	</div>
+{/if}
+{#if $notifications.length}
+	<Notifications />
+{/if}
 <main>
 	<div class="container flow">
 		<div class="header">
@@ -19,9 +28,6 @@
 						? 's'
 						: ''}
 				</a>
-			</div>
-			<div class="counter--mobile">
-				<a href="/saved"><span>{$savedImages.length}</span></a>
 			</div>
 		{/if}
 		<HeaderButtons
@@ -40,7 +46,6 @@
 
 	.header {
 		h1 {
-			// font-size: var(--step-1);
 			text-transform: uppercase;
 		}
 		a {

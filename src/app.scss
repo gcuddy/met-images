@@ -3,11 +3,15 @@
 :root {
 	--measure: 60ch;
 
+	--rgb-light-gray: 245, 245, 245;
+	--rgb-light-accent: 235, 235, 235;
+
 	--text: #000;
 	--met-red: #e4022b;
 	--met-red-glare: #ff1c46;
 	--met-red-lighter: #96011c;
 	--color-secondary: #119674;
+	--color-bg: rgb(var(--rgb-light-gray));
 
 	/* @link https://utopia.fyi/type/calculator?c=320,21,1.25,1140,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l */
 
@@ -135,6 +139,7 @@ body {
 	font-family: 'Fern Web', Georgia, 'Times New Roman', Times, serif;
 	overflow-x: hidden;
 	min-height: 100vh;
+	font-size: var(--step--1);
 }
 
 a {
@@ -145,7 +150,7 @@ button {
 	padding: 0.5rem 1rem;
 	background: var(--met-red);
 	color: white;
-	font-size: 1rem;
+	// font-size: 1rem;
 	border: none;
 	text-decoration: none;
 	border-radius: 0.25rem;
@@ -153,6 +158,7 @@ button {
 	cursor: pointer;
 	font-weight: 700;
 	font-family: 'Fern Web', Georgia, serif;
+	white-space: nowrap;
 }
 button:active {
 	transform: scale(0.97);
@@ -219,13 +225,19 @@ h2 {
 }
 
 h1 {
+	font-size: var(--step-3);
+	// max-width: 15ch;
+}
+
+// h2,
+// h3 {
+// 	max-width: 25ch;
+// }
+
+h2 {
 	font-size: var(--step-2);
 }
 
-h2 {
-	font-size: var(--step-1);
-}
-
 h3 {
-	font-size: var(--step-0);
+	font-size: var(--step-1);
 }

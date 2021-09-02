@@ -1,4 +1,5 @@
 <script context="module">
+	export const prerender = true;
 	export async function load({ page, fetch, session, context }) {
 		return {
 			props: {
@@ -11,6 +12,7 @@
 <script lang="ts">
 	import { artistStore } from '$lib/stores';
 	import { onMount } from 'svelte';
+	import '$lib/scss/utilities/auto-grid.scss';
 	export let name;
 	// import getUnicodeFlagIcon from 'country-flag-icons/unicode/index.js';
 	// import { country_to_code, nationality_to_code } from '$lib/countries';
@@ -50,11 +52,11 @@
 	};
 
 	const loadMore = async () => {
-		worksIds.slice(index, index + 10).forEach(async (id) => {
+		worksIds.slice(index, index + 50).forEach(async (id) => {
 			const res = await fetchData(id);
 			if (res) works = [...works, res];
 		});
-		index += 10;
+		index += 50;
 		if (worksIds.length > index - 1) {
 			hasMore = true;
 		} else {
@@ -71,17 +73,19 @@
 		worksIds = results.objectIDs;
 		console.log(worksIds);
 		// load the first batch of works
-		worksIds.slice(0, 10).forEach(async (id) => {
+		worksIds.slice(0, 50).forEach(async (id) => {
 			const res = await fetchData(id);
 			if (res) works = [...works, res];
 		});
-		index = 10;
+		index = 50;
 		if (worksIds.length > index - 1) hasMore = true;
 		loading = false;
 	});
 </script>
 
-<div class="center flow">
+<!-- TODO: add highlights section -->
+
+<div class="flow">
 	{#if artist}
 		<h2>{artist?.name || name}</h2>
 		{#if artist?.nationality}
@@ -97,23 +101,30 @@
 				{artist?.birth || '??'} — {artist?.death || '??'}
 			</p>
 		{/if}
-		{#if artist?.bio}
+		<!-- {#if artist?.bio}
 			<p class="bio">
 				{artist?.bio}
 			</p>
-		{/if}
+		{/if} -->
 		{#if works.length}
 			<h3>Works</h3>
-			<ul>
+			<ul class="auto-grid" role="list">
 				{#each works as image}
 					<!-- {image} -->
 					<li>
 						<a href="/{image.objectID}">
-							<img
-								src={image.primaryImageSmall}
-								alt="Thumbnail for {image.title}"
-								data-id={image.objectID}
-							/>
+							<figure>
+								<img
+									src={image.primaryImageSmall}
+									alt="Thumbnail for {image.title}"
+									loading="lazy"
+									data-id={image.objectID}
+								/>
+								<figcaption>
+									<p class="department">{image.department}</p>
+									<p class="title">{@html image.title}</p>
+								</figcaption>
+							</figure>
 						</a>
 					</li>
 				{/each}
@@ -130,3 +141,33 @@
 		<p>Artist has not been indexed yet.</p>
 	{/if}
 </div>
+
+<style>
+	div {
+		max-width: 1200px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	ul {
+		padding: 0;
+	}
+	img {
+		border: 0.25rem solid #000;
+		border-radius: 0.25rem;
+	}
+	img {
+		width: 20em;
+		height: 20em;
+		object-fit: cover;
+	}
+	a {
+		text-decoration: none;
+	}
+	figcaption {
+		font-size: var(--step--1);
+		font-style: italic;
+	}
+	.department {
+		color: rgba(0, 0, 0, 0.5);
+	}
+</style>

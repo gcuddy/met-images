@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import type { MetObject } from './types';
 import { DEFAULT_OPTIONS } from './options';
+import { v4 as uuidv4 } from 'uuid';
 
 import { browser } from '$app/env';
 
@@ -39,3 +40,31 @@ export interface artist {
 }
 
 export const artistStore = writable<Map<string, artist>>(new Map());
+
+interface Notifcation {
+	message: string;
+	id: string;
+}
+
+function notificationStore() {
+	const { subscribe, set, update } = writable<Notifcation[]>([]);
+
+	const notify = (message: string) =>
+		update((val) => {
+			const id = uuidv4();
+			const newVal = [...val, { message, id }];
+			//settimeout to remove new notification after 3 seconds
+			setTimeout(() => {
+				remove(id);
+			}, 3000);
+			return newVal;
+		});
+	const remove = (id: string) => {
+		update((val) => val.filter((n) => n.id !== id));
+	};
+	return {
+		subscribe,
+		notify
+	};
+}
+export const notifications = notificationStore();

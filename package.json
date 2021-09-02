@@ -32,9 +32,11 @@
 		"svelte-infinite-scroll": "^2.0.0",
 		"svelte-intersection-observer": "^0.7.1",
 		"svelte-loading-spinners": "^0.1.7",
+		"svelte-notifications": "^0.9.91",
 		"svelte-preprocess": "^4.0.0",
 		"tslib": "^2.0.0",
-		"typescript": "^4.0.0"
+		"typescript": "^4.0.0",
+		"uuid": "^3.4.0"
 	},
 	"type": "module",
 	"dependencies": {
