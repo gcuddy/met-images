@@ -8,12 +8,17 @@
 
 	const dispatch = createEventDispatcher();
 
-	let changed = false;
 	let imageIds: number[];
 	let imagePromise: Promise<number[]>;
 	let showOptions = false;
 
-	import { currentImage, disableGlobalShortcuts, lastKey, options } from '$lib/stores';
+	import {
+		currentImage,
+		departmentChange,
+		disableGlobalShortcuts,
+		lastKey,
+		options
+	} from '$lib/stores';
 	import { updateArtistStore } from './helpers';
 
 	/* add in highlight/onview options
@@ -64,10 +69,10 @@
 		await goto('/');
 		// I'd like to make this go to the /id page eventually, so that the browser back button works etc
 		dispatch('loadingImage');
-		if (changed) {
+		if ($departmentChange) {
 			console.log('new url download');
 			imageIds = await loadImages();
-			changed = false;
+			$departmentChange = false;
 		}
 		let image = await randomImage();
 		dispatch('imageLoaded');
@@ -152,7 +157,7 @@
 						<input
 							type="checkbox"
 							bind:checked={department.checked}
-							on:click={() => (changed = true)}
+							on:click={() => ($departmentChange = true)}
 						/>
 						{department.displayName}
 					</label>

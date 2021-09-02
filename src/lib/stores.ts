@@ -68,3 +68,5 @@ function notificationStore() {
 	};
 }
 export const notifications = notificationStore();
+
+export const departmentChange = writable(false);

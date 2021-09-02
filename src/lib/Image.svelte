@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { lastKey, notifications, options, savedImages } from './stores';
+	import { departmentChange, lastKey, notifications, options, savedImages } from './stores';
 	import { StarIcon } from 'svelte-feather-icons';
 	import slugify from 'slugify';
 
@@ -55,6 +55,7 @@
 				})
 			};
 		});
+		departmentChange.set(true);
 		notifications.notify(`Now only showing images from department: ${department}`);
 	};
 </script>
