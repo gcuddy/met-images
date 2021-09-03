@@ -15,10 +15,15 @@
 	import Filter from '$lib/Filter.svelte';
 	import Search from '$lib/Search.svelte';
 	import slugify from 'slugify';
+	import { filter } from 'jszip';
+
+	// Filter Variables
+	let showFilter = false;
+	let selectedDepartments = [];
+	$: console.log(selectedDepartments);
 
 	// todo: multiple selection
 	let selectedItems = [];
-	$: console.log(selectedItems);
 
 	let activeLookup = new Map();
 	let showDownloadPopup = false;
@@ -113,7 +118,7 @@
 	let searchInput: HTMLInputElement;
 	let searchTerm = '';
 	let filteredImages = $savedImages.slice();
-	$: console.log(searchTerm);
+	$: console.log(selectedDepartments);
 	// $: filteredImages = $savedImages.filter(
 	// 	(image) =>
 	// 		image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
@@ -156,6 +161,13 @@
 			if (num === 1) loadingDownload = false;
 		});
 	};
+	const handleClick = (e: MouseEvent) => {
+		const target = e.target as HTMLElement;
+		console.log(target.closest('.filter-container'));
+		if (showFilter && !target.closest('.filter-container')) {
+			showFilter = false;
+		}
+	};
 	onMount(() => {
 		// do I want to retain this activeLookup state when coming back to it?
 		$savedImages.forEach((image) => {
@@ -179,7 +191,7 @@
 </script>
 
 <!-- keyboard shortcut for navigation -->
-<svelte:window on:keydown={handleKeyboardShortcuts} />
+<svelte:window on:keydown={handleKeyboardShortcuts} on:click={handleClick} />
 
 <!-- TODO: add filter button (category, etc) and "Collections" feature to add works to custom collections -->
 
@@ -249,9 +261,11 @@
 				<option>All</option>
 				<option>Selected</option>
 			</select> -->
-			<Filter bind:filteredImages />
+			<Filter bind:filteredImages bind:showFilter bind:selectedDepartments />
 		</div>
-		{#each filteredImages as image (image.objectID)}
+		{#each filteredImages.filter((i) =>
+			selectedDepartments.length ? selectedDepartments.includes(i.department) : i
+		) as image (image.objectID)}
 			<li animate:flip={{ duration: 200 }} bind:this={items[image.objectID]}>
 				<div class="saved-image">
 					<div class="saved-image__icon" class:active={activeLookup.get(image.objectID)}>
@@ -464,7 +478,11 @@
 	}
 	.saved-image {
 		display: flex;
-		gap: 1.5rem;
+		// gap: 1.5rem;
+		// old safari doesn't support gap...
+		> *:not(:first-child) {
+			margin-left: 1.5rem;
+		}
 		font-size: var(--step-0);
 		align-items: center;
 		--flow-space: var(--space-3xs);

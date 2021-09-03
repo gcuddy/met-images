@@ -1,3 +1,13 @@
+<script context="module">
+	export async function load({ page }) {
+		return {
+			props: {
+				path: page.path
+			}
+		};
+	}
+</script>
+
 <script lang="ts">
 	import { isLoading, notifications, savedImages } from '$lib/stores';
 	import HeaderButtons from '$lib/HeaderButtons.svelte';
@@ -5,21 +15,27 @@
 	import '../reset.css';
 	import '../app.scss';
 	import Notifications from '$lib/Notifications.svelte';
+	import Badge from '$lib/Badge.svelte';
+	import Inbox from '$lib/icons/Inbox.svelte';
+
+	export let path: string;
 </script>
 
-{#if $savedImages.length}
-	<div class="counter--mobile">
-		<a href="/saved"><span>{$savedImages.length}</span></a>
-	</div>
-{/if}
 {#if $notifications.length}
 	<Notifications />
 {/if}
 <main>
 	<div class="container flow">
-		<div class="header">
+		<header class="header">
 			<h1><a href="/">met explorer</a></h1>
-		</div>
+			<div class="counter--mobile">
+				<a href="/saved">
+					<Inbox size="1.3em" fill={path === '/saved' ? 'var(--button-active)' : 'none'} /><Badge
+						count={$savedImages.length}
+					/></a
+				>
+			</div>
+		</header>
 		{#if $savedImages.length}
 			<div class="counter--desktop">
 				<a href="/saved"
@@ -65,16 +81,18 @@
 		&--mobile {
 			--flow-space: 0;
 			display: none;
-			background: var(--met-red-lighter);
-			color: white;
+			right: -3px;
+			top: -3px;
+			// background: var(--met-red-lighter);
+			// color: white;
 			z-index: 9;
-			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-				'Open Sans', 'Helvetica Neue', sans-serif;
-			font-weight: 700;
-			filter: invert(100%);
+			// font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+			// 	'Open Sans', 'Helvetica Neue', sans-serif;
+			// font-weight: 700;
+			// filter: invert(100%);
 			a {
-				border-radius: 100%;
-				padding: 0.5rem 0.75rem;
+				// border-radius: 100%;
+				// padding: 0.5rem 0.75rem;
 				display: block;
 			}
 		}

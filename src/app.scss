@@ -10,8 +10,12 @@
 	--met-red: #e4022b;
 	--met-red-glare: #ff1c46;
 	--met-red-lighter: #96011c;
-	--color-secondary: #119674;
+	--hsl-secondary: 165deg 80% 33%;
+
+	--color-secondary: hsl(var(--hsl-secondary));
 	--color-bg: rgb(var(--rgb-light-gray));
+
+	--button-active: hsla(var(--hsl-secondary) / 51%);
 
 	/* @link https://utopia.fyi/type/calculator?c=320,21,1.25,1140,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l */
 
