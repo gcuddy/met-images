@@ -3,12 +3,6 @@
 
 	export let searchTerm = '';
 	export let searchInput;
-	export let filteredImages;
-	$: filteredImages = $savedImages.filter(
-		(image) =>
-			image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
-			image.artistDisplayName.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1
-	);
 </script>
 
 <input
@@ -19,7 +13,7 @@
 	placeholder="Search"
 	on:focus={() => ($disableGlobalShortcuts = true)}
 	on:blur={() => ($disableGlobalShortcuts = false)}
-	on:keydown={(e) => e.code === 'Escape' && searchInput.blur()}
+	on:keydown|stopPropagation={(e) => e.code === 'Escape' && searchInput.blur()}
 />
 
 <style>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import { artistStore, disableGlobalShortcuts, savedImages } from '$lib/stores';
+	import { activeSavedItem, artistStore, disableGlobalShortcuts, savedImages } from '$lib/stores';
 	import { afterUpdate, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isOutOfViewport } from '$lib/helpers';
@@ -15,60 +15,67 @@
 	import Filter from '$lib/Filter.svelte';
 	import Search from '$lib/Search.svelte';
 	import slugify from 'slugify';
-	import { filter } from 'jszip';
 
 	// Filter Variables
 	let showFilter = false;
 	let selectedDepartments = [];
-	$: console.log(selectedDepartments);
 
 	// todo: multiple selection
 	let selectedItems = [];
 
-	let activeLookup = new Map();
+	//Download variables
 	let showDownloadPopup = false;
-	let activeID: number;
-	let items: Map<number, HTMLElement> = new Map();
-	const handleKeyboardShortcuts = (event: KeyboardEvent) => {
+	let loadingDownload = false;
+	const downloadProgess = tweened(0, {
+		duration: 600,
+		easing: cubicOut
+	});
+	let downloadPopup: HTMLElement;
+	const downloadImages = async (images: MetObject[]) => {
+		loadingDownload = true;
+		await download(images, (num: number) => {
+			downloadProgess.set(num);
+			if (num === 1) loadingDownload = false;
+		});
+	};
+
+	//Focus Variables
+	let list: HTMLElement;
+	let links: HTMLElement[] = [];
+	let active: HTMLElement;
+	let savedImageDivs: HTMLElement[] = [];
+
+	// todo: persist focused item for when user goes back to the list (handle page nav)
+
+	const handleGlobalKeyboardShortcuts = (event: KeyboardEvent) => {
 		if ($disableGlobalShortcuts) return;
-		console.log(event.code);
 		switch (event.code) {
 			case 'Escape': {
 				event.preventDefault();
 				if (showDownloadPopup) {
 					showDownloadPopup = false;
+					break;
+				}
+				// clear filters if nothing selected
+				console.log(document.activeElement);
+				console.log(searchInput);
+				if (document.activeElement !== searchInput && !showFilter) {
+					selectedDepartments = [];
+					searchTerm = '';
+					// $disableGlobalSfhortcuts = false;
+					break;
 				}
 				break;
 			}
 			case 'KeyJ': {
+				// this will jump to first item or last focused item globally
 				event.preventDefault();
-				// this might be a stupid way to do this, but it works
-				// should I instead set focus? tabindex etc?
-				setActive('forward');
+				navigateForward();
 				break;
 			}
 			case 'KeyK': {
 				event.preventDefault();
-				// this might be a stupid way to do this, but it works
-				setActive('backwards');
-				break;
-			}
-			case 'Enter': {
-				if (activeID) {
-					goto(`${activeID}`);
-				}
-				break;
-			}
-			case 'KeyX': {
-				if (activeID) {
-					event.preventDefault();
-					if (selectedItems.includes(activeID)) {
-						selectedItems = selectedItems.filter((id) => id !== activeID);
-					} else {
-						selectedItems = [...selectedItems, activeID];
-					}
-					break;
-				}
+				navigateBackward();
 				break;
 			}
 			case 'Slash': {
@@ -76,54 +83,82 @@
 				searchInput.focus();
 				break;
 			}
-		}
-	};
-
-	const setActive = (direction: 'forward' | 'backwards') => {
-		// find the first item in activeLookup that is false and set it to true
-		const lookup = Array.from(activeLookup.keys());
-		console.log(lookup);
-		let index = 0;
-		for (const [key, value] of activeLookup) {
-			if (value) {
-				// set the value to false
-				activeLookup.set(key, false);
-				// set next loop item to true
-				if (direction === 'forward') {
-					if (lookup[index + 1]) {
-						activeID = lookup[index + 1];
-						console.log(activeID);
-						activeLookup = activeLookup.set(lookup[index + 1], true);
-					}
-					index++;
-					return;
-				} else if (direction === 'backwards') {
-					if (lookup[index - 1]) {
-						activeID = lookup[index - 1];
-						activeLookup = activeLookup.set(lookup[index - 1], true);
-					}
-					index++;
-					return;
+			case 'KeyF': {
+				// bring up filter menu if nothing selected and not in search
+				if (!selectedItems.length) {
+					event.preventDefault();
+					showFilter = !showFilter;
 				}
-			} else {
-				index++;
+				break;
 			}
 		}
-		// if nothing was true, then just jump to first item
-		let item = direction === 'forward' ? 0 : lookup.length - 1;
-		activeLookup = activeLookup.set(lookup[item], true);
-		activeID = lookup[item];
+	};
+	const handleClick = (e: MouseEvent) => {
+		const target = e.target as HTMLElement;
+		if (showFilter && !target.closest('.filter-container')) {
+			showFilter = false;
+		}
 	};
 
+	const handleKeyboardNav = (event: KeyboardEvent) => {
+		active = document.activeElement as HTMLElement;
+		switch (event.code) {
+			// J or arrow down to next item
+			case 'ArrowDown': {
+				event.preventDefault();
+				navigateForward();
+				break;
+			}
+			case 'ArrowUp': {
+				event.preventDefault();
+				navigateBackward();
+				break;
+			}
+			case 'KeyX': {
+				event.preventDefault();
+				const activeID = parseInt(active.dataset.id);
+				if (selectedItems.includes(activeID)) {
+					selectedItems = selectedItems.filter((id) => id !== activeID);
+				} else {
+					selectedItems = [...selectedItems, activeID];
+				}
+				break;
+			}
+		}
+	};
+	const navigateForward = () => {
+		let index = links.indexOf(active);
+		console.log(index);
+		if (index === -1) {
+			// if no active item, jump to first item
+			links[0].focus();
+			console.log(links[0]);
+			active = links[0];
+			return;
+		}
+		const next = links[index + 1];
+		if (next) {
+			next.focus();
+			active = next;
+		}
+	};
+	const navigateBackward = () => {
+		let index = links.indexOf(active);
+		const prev = links[index - 1];
+		if (prev) {
+			prev.focus();
+			active = prev;
+		}
+	};
 	let searchInput: HTMLInputElement;
 	let searchTerm = '';
 	let filteredImages = $savedImages.slice();
-	$: console.log(selectedDepartments);
-	// $: filteredImages = $savedImages.filter(
-	// 	(image) =>
-	// 		image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
-	// 		image.artistDisplayName.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1
-	// );
+	$: filteredImages = $savedImages.filter(
+		(image) =>
+			(selectedDepartments.length ? selectedDepartments.includes(image.department) : true) &&
+			(image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
+				image.artistDisplayName.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1)
+	);
 	function handleShiftSelect(event: MouseEvent, id: number) {
 		if (event.shiftKey) {
 			event.preventDefault();
@@ -148,52 +183,48 @@
 		}
 	}
 
-	let loadingDownload = false;
-	const downloadProgess = tweened(0, {
-		duration: 600,
-		easing: cubicOut
-	});
-	let downloadPopup: HTMLElement;
-	const downloadImages = async (images: MetObject[]) => {
-		loadingDownload = true;
-		await download(images, (num: number) => {
-			downloadProgess.set(num);
-			if (num === 1) loadingDownload = false;
-		});
-	};
-	const handleClick = (e: MouseEvent) => {
+	// focus controller
+	const setUpFocus = (e: FocusEvent) => {
+		// this is called when an anchor element gets focused, we start our roving tabindex focus controller
 		const target = e.target as HTMLElement;
-		console.log(target.closest('.filter-container'));
-		if (showFilter && !target.closest('.filter-container')) {
-			showFilter = false;
-		}
-	};
-	onMount(() => {
-		// do I want to retain this activeLookup state when coming back to it?
-		$savedImages.forEach((image) => {
-			activeLookup.set(image.objectID, false);
-		});
-	});
-	// scroll to active
-	afterUpdate(() => {
-		if (activeID) {
-			// wait this doesn't even need to be a map..
-			let item = items[activeID];
-			if (item && isOutOfViewport(item)) {
-				item.scrollIntoView({
-					behavior: 'auto',
-					block: 'center',
-					inline: 'center'
-				});
+		links.forEach((link) => {
+			if (link) {
+				link.tabIndex = -1;
 			}
-		}
+		});
+		target.tabIndex = 0;
+		target.focus();
+		// now remove the event listeners
+		links.forEach((link) => link.removeEventListener('focus', setUpFocus));
+	};
+	const handleFocus = (e: FocusEvent) => {
+		const target = e.target as HTMLElement;
+
+		// remove previous focus-within class
+		list.querySelector('.saved-image.focus-within')?.classList.remove('focus-within');
+
+		// set target to new active Element
+		active = target;
+
+		// change tabindex
+		links.forEach((link) => {
+			if (link) {
+				link.tabIndex = -1;
+			}
+		});
+		active.tabIndex = 0;
+
+		// add .focus-within to parent div
+		active.closest('.saved-image').classList.add('focus-within');
+	};
+
+	onMount(() => {
+		// links = Array.from(list.querySelectorAll('.saved-image__info a'));
 	});
 </script>
 
 <!-- keyboard shortcut for navigation -->
-<svelte:window on:keydown={handleKeyboardShortcuts} on:click={handleClick} />
-
-<!-- TODO: add filter button (category, etc) and "Collections" feature to add works to custom collections -->
+<svelte:window on:keydown={handleGlobalKeyboardShortcuts} on:click={handleClick} />
 
 <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
 	<symbol id="bin-icon" viewBox="0 0 50 50">
@@ -204,37 +235,14 @@
 	</symbol>
 </svg>
 <div class="saved-images flow">
-	<Search bind:searchTerm bind:searchInput bind:filteredImages />
-	<!--
-	<input
-		class="saved-images__search"
-		type="text"
-		bind:value={searchTerm}
-		bind:this={searchInput}
-		placeholder="Search"
-		on:focus={() => ($disableGlobalShortcuts = true)}
-		on:blur={() => ($disableGlobalShortcuts = false)}
-	/> -->
+	<Search bind:searchTerm bind:searchInput />
 
-	<ul class="saved-images-list flow" class:selected-items={selectedItems.length}>
-		<!-- {#if selectedItems.length > 0}
-			<div transition:fly class="saved-images__selected-menu">
-				<div>
-					<div class="saved-images__selected-actions">
-						<button
-							on:click={() => {
-								$savedImages = $savedImages.filter((i) => !selectedItems.includes(i.objectID));
-								selectedItems = [];
-							}}
-							><Trash2Icon size=".75x" /> Delete {selectedItems.length} Item{selectedItems.length >
-							1
-								? 's'
-								: ''}</button
-						>
-					</div>
-				</div>
-			</div>
-		{/if} -->
+	<ul
+		class="saved-images-list flow"
+		class:selected-items={selectedItems.length}
+		bind:this={list}
+		on:keydown={handleKeyboardNav}
+	>
 		<div class="list-actions" class:selected={selectedItems.length > 0}>
 			<button
 				class="list-actions__download"
@@ -257,23 +265,16 @@
 						: ''}</button
 				>
 			{/if}
-			<!-- <select>
-				<option>All</option>
-				<option>Selected</option>
-			</select> -->
 			<Filter bind:filteredImages bind:showFilter bind:selectedDepartments />
 		</div>
-		{#each filteredImages.filter((i) =>
-			selectedDepartments.length ? selectedDepartments.includes(i.department) : i
-		) as image (image.objectID)}
-			<li animate:flip={{ duration: 200 }} bind:this={items[image.objectID]}>
-				<div class="saved-image">
-					<div class="saved-image__icon" class:active={activeLookup.get(image.objectID)}>
+		{#each filteredImages as image, index (image.objectID)}
+			<li animate:flip={{ duration: 250 }}>
+				<div class="saved-image" bind:this={savedImageDivs[index]} class:focus-within={false}>
+					<div class="saved-image__icon">
 						<img
 							src={image.primaryImageSmall}
 							alt="Thumbnail for {image.title}"
 							data-id={image.objectID}
-							data-active={activeLookup.get(image.objectID)}
 							class:hidden={selectedItems.includes(image.objectID)}
 						/>
 						<div class="bulk-actions">
@@ -283,25 +284,35 @@
 								bind:group={selectedItems}
 								value={image.objectID}
 								on:click={(e) => handleShiftSelect(e, image.objectID)}
+								on:focus={(e) => e.target.closest('.saved-image').querySelector('a').focus()}
 								tabindex="-1"
 							/>
 						</div>
 					</div>
 					<div class="saved-image__info flow">
 						<h2>
-							<a href="/{image.objectID}">{@html image.title}</a>
+							<!-- would love to have a version where i find out which is the first focused, ie from bottom... -->
+							<a
+								on:focus|once={setUpFocus}
+								href="/{image.objectID}"
+								data-id={image.objectID}
+								on:focus={handleFocus}
+								bind:this={links[index]}
+								>{@html image.title}
+							</a>
 						</h2>
 						{#if image.artistDisplayName}
 							<p class="artist">
-								<a href="/artist/{slugify(image.artistDisplayName)}">{image.artistDisplayName}</a>
+								{image.artistDisplayName}
 							</p>
 						{/if}
 					</div>
-					<button
+					<!-- remove the trash button for now since I have the select multiple option... -->
+					<!-- <button
 						on:click={() =>
 							($savedImages = $savedImages.filter((i) => i.objectID !== image.objectID))}
 						aria-label="delete {image.title}"><svg><use xlink:href="#bin-icon" /></svg></button
-					>
+					> -->
 				</div>
 			</li>
 		{/each}
@@ -370,77 +381,22 @@
 			padding-top: var(--space-3xs-2xs);
 		}
 
-		.filter {
-		}
-
-		&__toggle {
-			// text-indent: -9999px;
-			// position: absolute;
-			// left: -2rem;
-			// height: 1em;
-			// width: 1em;
-			// background-color: white;
-			// z-index: 1;
-			// border-radius: 100%;
-			// padding: 0;
-			// /* padding-top: var(--space-3xs-2xs); */
-			// top: calc(50% - var(--space-3xs-2xs));
-			// &:hover {
-			// 	background: revert !important;
-			// }
-			// &::before {
-			// 	background: url(/assets/x-circle.svg) no-repeat center/100%;
-			// 	position: absolute;
-			// 	top: 0;
-			// 	left: 0;
-			// 	content: '';
-			// 	width: 1em;
-			// 	height: 1em;
-			// }
-		}
 		&.selected {
 			position: sticky;
 			top: var(--space-3xs);
 			z-index: 9;
-			// background: linear-gradient(135deg, var(--met-red), var(--met-red-lighter));
 			color: #fff;
 
 			.list-actions {
 				&__download {
-					// position: absolute;
 					top: 0;
 					right: 0;
-					// padding: 0.5rem;
-					// background: rgba(0, 0, 0, 0.5);
 				}
 			}
 		}
 	}
 	.hidden {
 		visibility: hidden;
-	}
-	.active {
-		input[type='checkbox'] {
-			border: 3px solid var(--color-secondary);
-			&::before {
-				content: '';
-				position: absolute;
-				top: 50%;
-				left: -1rem;
-				left: calc(-1 * var(--space-xs));
-				border-radius: 100%;
-				width: 6px;
-				height: 6px;
-				background: var(--met-red);
-				pointer-events: none;
-				// add arrow here
-			}
-		}
-		input[type='checkbox']:checked {
-			::after {
-				border-color: var(--met-red);
-			}
-		}
 	}
 	li:focus img {
 		border: 3px solid var(--met-red);
@@ -460,16 +416,6 @@
 				height: 1px;
 				z-index: 10;
 			}
-		}
-
-		&__search {
-			width: 80%;
-			padding: 0.5rem;
-			border: 1px solid gray;
-			margin-left: auto;
-			display: block;
-			margin-right: auto;
-			border-radius: 0.5rem;
 		}
 	}
 	ul {
@@ -522,6 +468,36 @@
 			}
 			.artist a {
 				text-decoration: none;
+			}
+		}
+		// styling focus ring
+		&:focus-within {
+			a {
+				outline: none;
+			}
+			input[type='checkbox'] {
+				box-shadow: 0 0 0 3px var(--color-secondary) !important;
+			}
+		}
+		&:focus-within,
+		&.focus-within {
+			input[type='checkbox']::before {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: -1rem;
+				left: calc(-1 * var(--space-xs));
+				border-radius: 100%;
+				width: 6px;
+				height: 6px;
+				background: hsl(var(--hsl-secondary) / 30%);
+				pointer-events: none;
+				// add arrow here
+			}
+		}
+		&:focus-within {
+			input[type='checkbox']::before {
+				background: hsl(var(--hsl-secondary) / 60%);
 			}
 		}
 	}
