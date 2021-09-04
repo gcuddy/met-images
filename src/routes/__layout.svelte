@@ -21,6 +21,12 @@
 	export let path: string;
 </script>
 
+<!--
+<svelte:head>
+	<link rel="preload" href="/fonts/PomfretV2-Regular.woff2" as="font" type="font/woff2" />
+	<link rel="preload" href="/fonts/FernVariable-Roman-VF.woff2" as="font" type="font/woff2" />
+</svelte:head> -->
+
 {#if $notifications.length}
 	<Notifications />
 {/if}
