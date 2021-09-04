@@ -8,7 +8,12 @@
 	export let showFilter = false;
 	export let filteredImages: MetObject[];
 	let clicked = false;
+	let button: HTMLButtonElement;
+
 	$: departments = [...new Set(filteredImages.map((i) => i.department))];
+
+	//todo: trap focus when open, restore focus when closed
+	// $: if (showFilter) button && button.focus();
 
 	export let selectedDepartments = [];
 
@@ -35,9 +40,16 @@
 	}
 </script>
 
+<!-- TODO: proper keyboard nav -->
+
 <svelte:window on:keydown={handleKeydown} />
 <div class="filter-container">
-	<button class="filter" on:click={() => (showFilter = !showFilter)} class:active={showFilter}>
+	<button
+		class="filter"
+		on:click={() => (showFilter = !showFilter)}
+		class:active={showFilter}
+		bind:this={button}
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="1em"
@@ -101,6 +113,7 @@
 		border-radius: 1rem;
 		gap: 0.25rem;
 		z-index: 99;
+		-webkit-backdrop-filter: blur(6px);
 		backdrop-filter: blur(6px);
 		color: var(--text);
 	}
