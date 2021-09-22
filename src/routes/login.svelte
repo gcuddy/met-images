@@ -1,5 +1,5 @@
-<script lang="ts">
-	import supabase from '$lib/db';
+<!-- <script lang="ts">
+	// import supabase from '$lib/db';
 	import { disableGlobalShortcuts, user } from '$lib/stores';
 	import '$lib/scss/utilities/center.scss';
 
@@ -57,4 +57,4 @@
 			<input type="submit" value={loading ? 'Loading' : 'Send magic link'} disabled={loading} />
 		</form>
 	{/if}
-</div>
+</div> -->
