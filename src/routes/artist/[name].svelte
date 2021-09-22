@@ -49,7 +49,7 @@
 		{/if}
 		{#if images[0]?.artistBeginDate || images[0]?.artistEndDate}
 			<p>
-				{images[0]?.birth || '??'} — {images[0]?.death || '??'}
+				{images[0]?.artistBeginDate || '??'} — {images[0]?.artistEndDate || '??'}
 			</p>
 		{/if}
 		{#if images.length}
