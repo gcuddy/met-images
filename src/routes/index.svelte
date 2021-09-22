@@ -4,12 +4,18 @@
 	import { Firework } from 'svelte-loading-spinners';
 
 	import Image from '$lib/Image.svelte';
-	import { currentImage, isLoading } from '$lib/stores';
+	import { currentImage, isLoading, user } from '$lib/stores';
 	import { MetRed } from '$lib/constants';
+	import supabase from '$lib/db';
+
+	user.set(supabase.auth.user());
+	supabase.auth.onAuthStateChange((_, session) => {
+		user.set(session.user);
+	});
 </script>
 
 <svelte:head>
-	<title>Met</title>
+	<title>Met Explorer</title>
 </svelte:head>
 <!-- <HeaderButtons on:loadingImage={() => (loading = true)} on:imageLoaded={() => (loading = false)} /> -->
 {#if $isLoading}

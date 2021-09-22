@@ -5,16 +5,17 @@
 			params: { culture }
 		} = page;
 		const res = await fetch(`/culture/${culture}.json`);
-		const highlights = await res.json();
-		console.log(highlights);
 		if (res.ok) {
+			const highlights = await res.json();
 			return {
 				props: {
 					culture,
 					highlights
-				}
+				},
+				maxage: 60 * 60 * 24 * 30
 			};
 		}
+		console.log('No result');
 		return {
 			status: res.status,
 			error: new Error(`Could not load /culture/${culture}.json`)

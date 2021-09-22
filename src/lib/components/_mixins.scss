@@ -1,0 +1,29 @@
+/*
+* Takes size (sm,md,lg) and box-shadow color
+* Returns fancy box-shadow
+*/
+@mixin shadow($size: 'lg', $color: '0deg 0% 50%') {
+	--shadow-color: #{$color};
+	$elevations: (
+		'sm': (
+			0.5px 1px 1px hsl(var(--shadow-color) / 0.7)
+		),
+		'md': (
+			1px 2px 2px hsl(var(--shadow-color) / 0.333),
+			2px 4px 4px hsl(var(--shadow-color) / 0.333),
+			3px 6px 6px hsl(var(--shadow-color) / 0.333)
+		),
+		'lg': (
+			1px 2px 2px hsl(var(--shadow-color) / 0.2),
+			2px 4px 4px hsl(var(--shadow-color) / 0.2),
+			4px 8px 8px hsl(var(--shadow-color) / 0.2),
+			8px 16px 16px hsl(var(--shadow-color) / 0.2),
+			16px 32px 32px hsl(var(--shadow-color) / 0.2)
+		)
+	);
+	box-shadow: map-get($elevations, $size);
+	// if size set to none, set box shadow to none
+	@if $size == 'none' {
+		box-shadow: none;
+	}
+}

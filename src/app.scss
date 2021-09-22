@@ -195,6 +195,10 @@ h2,
 h3 {
 	font-family: 'Pomfret Web', Georgia, serif;
 }
+ul {
+	list-style: none;
+	padding: 0;
+}
 
 /* dark mode media query */
 @media (prefers-color-scheme: dark) {
@@ -244,4 +248,9 @@ h2 {
 
 h3 {
 	font-size: var(--step-1);
+}
+.wrapper {
+	max-width: 60rem;
+	margin-left: auto;
+	margin-right: auto;
 }

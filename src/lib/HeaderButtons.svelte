@@ -20,6 +20,8 @@
 		options
 	} from '$lib/stores';
 	import { updateArtistStore } from './helpers';
+	import ShadowWrapper from './components/molecules/ShadowWrapper.svelte';
+	import Button from './components/atoms/Button.svelte';
 
 	/* add in highlight/onview options
     else if (options.highlight && !json.isHighlight) {
@@ -134,10 +136,14 @@
 
 <div class="header-buttons flow">
 	<div class="menu">
-		<button on:click={handleClick}><ShuffleIcon size=".75x" /> Get Random Image</button>
-		<button on:click={() => (showOptions = !showOptions)}
-			><SettingsIcon size=".75x" /> Options</button
+		<Button on:click={handleClick}><ShuffleIcon size=".75x" /> Get Random Image</Button>
+		<!-- <button on:click={handleClick}><ShuffleIcon size=".75x" /> Get Random Image</button> -->
+		<Button on:click={() => (showOptions = !showOptions)}
+			><SettingsIcon size=".75x" /> Options</Button
 		>
+		<!-- <button on:click={() => (showOptions = !showOptions)}
+			><SettingsIcon size=".75x" /> Options</button
+		> -->
 	</div>
 	{#if showOptions}
 		<div class="options flow" transition:slide>
@@ -167,7 +173,9 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
+	@import 'components/mixins';
+
 	label {
 		display: block;
 	}
@@ -185,5 +193,8 @@
 		margin-right: auto;
 		max-width: 600px;
 		text-align: center;
+	}
+	button {
+		@include shadow('sm');
 	}
 </style>

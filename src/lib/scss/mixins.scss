@@ -19,3 +19,6 @@
 }
 @mixin linear-gradient() {
 }
+@mixin element-color($color) {
+	background-image: url('data:image/svg+xml;utf8,<svg ...><g stroke="#{$color}" ... /></g></svg>');
+}

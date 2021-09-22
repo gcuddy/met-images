@@ -98,11 +98,11 @@ export const DEFAULT_OPTIONS = {
 			departmentId: 19,
 			checked: true,
 			displayName: 'Photographs'
-		},
-		{
-			departmentId: 21,
-			checked: true,
-			displayName: 'Modern Art'
 		}
+		// {
+		// 	departmentId: 21,
+		// 	checked: true,
+		// 	displayName: 'Modern Art'
+		// }
 	]
 };

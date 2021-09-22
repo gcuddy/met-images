@@ -51,3 +51,5 @@ export const updateArtistStore = (json: MetObject): void => {
 		return map;
 	});
 };
+
+export const stripTags = (str: string): string => str.replace(/(<([^>]+)>)/gi, '');

@@ -26,17 +26,16 @@ export async function search(searchRequest: MetSearchRequest): Promise<MetSearch
 	let requestUrl = searchUrl;
 	// I do it the template literal, not the URL constructor way, because i'm a badass
 	const q = encodeURIComponent(searchRequest.q);
-	Object.keys(searchRequest)
-		.filter((k) => k !== 'q')
-		.forEach((k, i) => {
-			const v = searchRequest[k];
-			requestUrl += `${i === 0 ? '?' : '&'}${k}=${
-				Array.isArray(v) ? v.map((v) => encodeURIComponent(v)).join('|') : encodeURIComponent(v)
-			}`;
-		});
-	requestUrl += `&q=${q}`;
+	const opts = Object.keys(searchRequest).filter((k) => k !== 'q');
+	opts.forEach((k, i) => {
+		const v = searchRequest[k];
+		requestUrl += `${i === 0 ? '?' : '&'}${k}=${
+			Array.isArray(v) ? v.map((v) => encodeURIComponent(v)).join('|') : encodeURIComponent(v)
+		}`;
+	});
+	requestUrl += `${opts.length ? '&' : '?'}q=${q}`;
 	console.log(requestUrl);
 	const response = await fetch(requestUrl);
-	console.log(response);
+	// console.log(response);
 	return await response.json();
 }

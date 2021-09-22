@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { departmentChange, lastKey, notifications, options, savedImages } from './stores';
-	import { StarIcon } from 'svelte-feather-icons';
-	import slugify from 'slugify';
 
 	import type { MetObject } from './types';
+	import { stripTags } from './helpers';
+	import { onMount } from 'svelte';
+	import Icon from './components/atoms/Icon.svelte';
 
 	export let image: MetObject;
 
@@ -58,16 +59,62 @@
 		departmentChange.set(true);
 		notifications.notify(`Now only showing images from department: ${department}`);
 	};
+
+	let Carousel; // for saving Carousel component class
+	let carousel; // for calling methods of carousel instance
+	onMount(async () => {
+		const module = await import('svelte-carousel');
+		Carousel = module.default;
+	});
+
+	const handleNextClick = () => {
+		carousel.goToNext();
+	};
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
+<svelte:head
+	><title>{image.title ? stripTags(image.title) + ' - ' : ''}Met Explorer</title></svelte:head
+>
 
 <div class="image">
 	<figure>
 		<div class="image__frame">
-			<a href={image.primaryImage || image.primaryImageSmall}
-				><img src={image.primaryImageSmall} alt="{image.title} by {image.artistDisplayName}" /></a
-			>
+			{#if image.primaryImage || image.primaryImageSmall}
+				{#if image.additionalImages.length}
+					<svelte:component this={Carousel} bind:this={carousel} let:loaded>
+						<a href={image.primaryImage || image.primaryImageSmall}
+							><img
+								src={image.primaryImageSmall}
+								alt="{image.title} by {image.artistDisplayName}"
+							/></a
+						>
+						{#each image.additionalImages as additionalImage, imageIndex (additionalImage)}
+							{#if loaded.includes(imageIndex)}
+								<div>
+									<img
+										src={additionalImage}
+										alt="{image.title} by {image.artistDisplayName} alternate angle"
+										loading="lazy"
+									/>
+								</div>
+							{/if}
+						{/each}
+					</svelte:component>
+				{:else}
+					<a href={image.primaryImage || image.primaryImageSmall}
+						><img
+							src={image.primaryImageSmall}
+							loading="lazy"
+							alt="{image.title} by {image.artistDisplayName}"
+						/></a
+					>
+				{/if}
+			{:else}
+				<div style="display: flex; flex-direction: column; justify-content: center;">
+					<p>Image not available!</p>
+				</div>
+			{/if}
 		</div>
 		<figcaption class="flow image__info">
 			<h2>
@@ -77,19 +124,25 @@
 			</h2>
 			{#if image.artistDisplayName}
 				<p class="artist">
-					<a href="/artist/{slugify(image.artistDisplayName)}">{image.artistDisplayName}</a>
+					<a href="/artist/{encodeURIComponent(image.artistDisplayName)}"
+						>{image.artistDisplayName}</a
+					>
 				</p>
 			{/if}
 			<p class="year">
-				{yearAdapter(image.objectBeginDate)}
-				- {yearAdapter(image.objectEndDate)}
+				<!-- {yearAdapter(image.objectBeginDate)}
+				- {yearAdapter(image.objectEndDate)} -->
+				{image.objectDate}
 			</p>
 			<dl>
 				{#each relevantKeys as key}
 					{#if image[key]}
 						<dt class:on-view={key === 'GalleryNumber'}>{camelToTitle(key)}</dt>
 						{#if key === 'department'}
-							<dd><button on:click={() => changeDepartment(image[key])}>{image[key]}</button></dd>
+							<dd>
+								<button on:click={() => changeDepartment(image[key])}>{image[key]}</button>
+								<!-- <Icon name="target" /> -->
+							</dd>
 						{:else if key === 'culture'}
 							<dd><a sveltekit:prefetch href="culture/{image[key]}"> {image[key]}</a></dd>
 						{:else}
@@ -125,6 +178,7 @@
 </div>
 
 <style lang="scss">
+	@import 'components/mixins';
 	.image__frame {
 		flex-basis: 0;
 		flex-grow: 999;
@@ -133,8 +187,12 @@
 		justify-content: center;
 	}
 	img {
-		border: 0.25rem solid #000;
-		border-radius: 0.25rem;
+		// border: 0.25rem solid #000;
+		// border-radius: 0.25rem;
+		margin-left: auto;
+		margin-right: auto;
+
+		// @include shadow('sm');
 	}
 	figure {
 		// display: flex;
@@ -178,6 +236,7 @@
 		margin-left: auto;
 		margin-right: auto;
 		font-feature-settings: 'opsz' 12;
+		text-align: left;
 	}
 	dt {
 		font-weight: 900;
@@ -193,6 +252,7 @@
 			text-align: left;
 			font-weight: normal;
 			text-decoration: underline;
+			white-space: normal;
 		}
 	}
 	.on-view {
@@ -222,6 +282,7 @@
 	.save-button {
 		display: flex;
 		align-items: baseline;
+		@include shadow('sm');
 		svg {
 			align-self: center;
 			width: 0.9em;

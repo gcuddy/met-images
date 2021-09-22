@@ -13,12 +13,21 @@
 	import { MetRed } from '$lib/constants';
 	import { Jumper } from 'svelte-loading-spinners';
 	import Filter from '$lib/Filter.svelte';
-	import Search from '$lib/Search.svelte';
+	import Search from '$lib/components/atoms/Search.svelte';
 	import slugify from 'slugify';
+	import Downloader from '$lib/Downloader.svelte';
+
+	const metaInfo = [
+		// 'department',
+		// 'objectDate',
+		'isHighlight',
+		'GalleryNumber'
+	];
 
 	// Filter Variables
 	let showFilter = false;
 	let selectedDepartments = [];
+	let filteredIds = [];
 
 	// todo: multiple selection
 	let selectedItems = [];
@@ -92,6 +101,13 @@
 				break;
 			}
 		}
+		switch (event.key) {
+			case 'd':
+			case 'D': {
+				event.preventDefault();
+				showDownloadPopup = !showDownloadPopup;
+			}
+		}
 	};
 	const handleClick = (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -155,7 +171,7 @@
 	let filteredImages = $savedImages.slice();
 	$: filteredImages = $savedImages.filter(
 		(image) =>
-			(selectedDepartments.length ? selectedDepartments.includes(image.department) : true) &&
+			(filteredIds.length ? filteredIds.includes(image.objectID) : true) &&
 			(image.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 ||
 				image.artistDisplayName.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1)
 	);
@@ -195,7 +211,9 @@
 		target.tabIndex = 0;
 		target.focus();
 		// now remove the event listeners
-		links.forEach((link) => link.removeEventListener('focus', setUpFocus));
+		links.forEach((link) => {
+			if (link) link.removeEventListener('focus', setUpFocus);
+		});
 	};
 	const handleFocus = (e: FocusEvent) => {
 		const target = e.target as HTMLElement;
@@ -225,6 +243,7 @@
 
 <!-- keyboard shortcut for navigation -->
 <svelte:window on:keydown={handleGlobalKeyboardShortcuts} on:click={handleClick} />
+<svelte:head><title>Saved Items ({$savedImages.length}) - Met Explorer</title></svelte:head>
 
 <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
 	<symbol id="bin-icon" viewBox="0 0 50 50">
@@ -235,7 +254,7 @@
 	</symbol>
 </svg>
 <div class="saved-images flow">
-	<Search bind:searchTerm bind:searchInput />
+	<Search bind:searchTerm bind:searchInput placeholder="Filter" />
 
 	<ul
 		class="saved-images-list flow"
@@ -244,12 +263,14 @@
 		on:keydown={handleKeyboardNav}
 	>
 		<div class="list-actions" class:selected={selectedItems.length > 0}>
-			<button
-				class="list-actions__download"
-				on:click={() => (showDownloadPopup = !showDownloadPopup)}
-				style="--flow-space: 0;"
-				>Download {selectedItems.length || filteredImages.length} items</button
-			>
+			{#if $savedImages.length > 0}
+				<button
+					class="list-actions__download"
+					on:click={() => (showDownloadPopup = !showDownloadPopup)}
+					style="--flow-space: 0;"
+					>Download {selectedItems.length || filteredImages.length} items</button
+				>
+			{/if}
 			{#if selectedItems.length > 0}
 				<button class="list-actions__toggle" transition:fade on:click={() => (selectedItems = [])}
 					>Un-select items</button
@@ -265,7 +286,9 @@
 						: ''}</button
 				>
 			{/if}
-			<Filter bind:filteredImages bind:showFilter bind:selectedDepartments />
+			{#if $savedImages.length > 0}
+				<Filter bind:filteredImages bind:showFilter bind:selectedDepartments bind:filteredIds />
+			{/if}
 		</div>
 		{#each filteredImages as image, index (image.objectID)}
 			<li animate:flip={{ duration: 250 }}>
@@ -276,6 +299,7 @@
 							alt="Thumbnail for {image.title}"
 							data-id={image.objectID}
 							class:hidden={selectedItems.includes(image.objectID)}
+							loading="lazy"
 						/>
 						<div class="bulk-actions">
 							<input
@@ -301,11 +325,23 @@
 								>{@html image.title}
 							</a>
 						</h2>
-						{#if image.artistDisplayName}
+						<div class="saved-image__meta">
 							<p class="artist">
 								{image.artistDisplayName}
 							</p>
-						{/if}
+							<div class="meta-info">
+								{#each metaInfo as info}
+									{#if image[info]}
+										<span
+											class={info}
+											title={info === 'iåsHighlight' ? 'Highlighted image' : undefined}
+										>
+											{info !== 'isHighlight' ? image[info] : ''}
+										</span>
+									{/if}
+								{/each}
+							</div>
+						</div>
 					</div>
 					<!-- remove the trash button for now since I have the select multiple option... -->
 					<!-- <button
@@ -317,55 +353,7 @@
 			</li>
 		{/each}
 	</ul>
-	{#if showDownloadPopup}
-		<div
-			class="download-container"
-			on:click|stopPropagation|self={() => (showDownloadPopup = false)}
-		>
-			<div
-				class="download-popup flow"
-				role="dialog"
-				aria-labelledby="download-label"
-				bind:this={downloadPopup}
-			>
-				{#if !loadingDownload}
-					<button class="close" on:click={() => (showDownloadPopup = false)}>Close</button>
-					<p id="download-label">Select download option.</p>
-
-					<ul class="flow">
-						<li>
-							<button
-								on:click={() =>
-									downloadImages(
-										selectedItems.length > 0
-											? $savedImages.filter((s) => selectedItems.includes(s.objectID))
-											: filteredImages
-									)}>Images</button
-							>
-						</li>
-						<li>
-							<button>Markdown</button>
-						</li>
-						<li>
-							<button>CSV</button>
-						</li>
-						<li>
-							<button>JSON</button>
-						</li>
-					</ul>
-				{:else if !$downloadProgess}
-					<p id="download-label">Downloading images...</p>
-					<Jumper color={MetRed} size="3" unit="em" />
-				{:else if $downloadProgess}
-					<div class="download-progress">
-						<p id="download-label">Zipping up...</p>
-						<p>{Math.round($downloadProgess * 100)}%</p>
-						<progress value={$downloadProgess} />
-					</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
+	<Downloader {selectedItems} {filteredImages} bind:showDownloadPopup />
 </div>
 
 <style lang="scss">
@@ -408,6 +396,7 @@
 
 		&-list {
 			// position: relative;
+			--flow-space: 0.5em;
 			&::before {
 				position: absolute;
 				content: '';
@@ -418,10 +407,6 @@
 			}
 		}
 	}
-	ul {
-		list-style: none;
-		padding: 0;
-	}
 	.saved-image {
 		display: flex;
 		// gap: 1.5rem;
@@ -431,6 +416,7 @@
 		}
 		font-size: var(--step-0);
 		align-items: center;
+		padding: var(--space-3xs) var(--space-2xs);
 		--flow-space: var(--space-3xs);
 
 		&__icon {
@@ -458,16 +444,42 @@
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			position: relative;
 			h2 {
 				font-size: var(--step-0);
 				text-overflow: ellipsis;
 				overflow: hidden;
+
+				a::before {
+					content: '';
+					left: 0;
+					top: 0;
+					bottom: 0;
+					right: 0;
+					position: absolute;
+				}
 			}
 			p {
 				font-size: var(--step--1);
 			}
 			.artist a {
 				text-decoration: none;
+			}
+		}
+		&__meta {
+			font-size: var(--step--1);
+			display: flex;
+			justify-content: space-between;
+			.GalleryNumber {
+				color: var(--met-red);
+			}
+			.isHighlight {
+				&::before {
+					content: '⭐️';
+					@media (prefers-color-scheme: dark) {
+						filter: invert(1);
+					}
+				}
 			}
 		}
 		// styling focus ring
@@ -499,6 +511,9 @@
 			input[type='checkbox']::before {
 				background: hsl(var(--hsl-secondary) / 60%);
 			}
+		}
+		&:hover {
+			background-color: rgb(var(--rgb-light-accent));
 		}
 	}
 	img {
@@ -598,67 +613,6 @@
 		width: 20rem;
 		margin-left: auto;
 		margin-right: auto;
-	}
-	// might be a more accessible way to do this...
-	.download-container {
-		position: fixed;
-		width: 100vw;
-		height: 100vh;
-		top: 0;
-		left: 0;
-		background: rgba(0, 0, 0, 0.08);
-		z-index: 9999;
-	}
-	.download-popup {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background: linear-gradient(145deg, rgb(var(--rgb-light-gray)), rgb(var(--rgb-light-accent)));
-		padding: 2rem;
-		border-radius: 1rem;
-		font-size: var(--step-0);
-		color: var(--text);
-		z-index: 9;
-		width: 20rem;
-
-		.close {
-			text-indent: -9999px;
-			position: absolute;
-			top: -8px;
-			left: -8px;
-			height: 1em;
-			width: 1em;
-			background-color: white;
-			z-index: 1;
-			border-radius: 100%;
-			padding: 0;
-			&:hover {
-				background: revert !important;
-			}
-			&::before {
-				background: url(/assets/x-circle.svg) no-repeat center/100%;
-				position: absolute;
-				top: 0;
-				left: 0;
-				content: '';
-				width: 1em;
-				height: 1em;
-			}
-		}
-		button {
-			font-size: var(--step-0);
-			color: var(--text);
-			background: rgba(255, 255, 255, 0.25);
-			&:hover {
-				background: rgba(255, 255, 255, 0.5);
-			}
-		}
-	}
-	progress {
-		display: block;
-		width: 100%;
-		border-radius: 0.25rem;
 	}
 	ul.selected-items {
 		img {

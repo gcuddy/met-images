@@ -9,16 +9,20 @@
 </script>
 
 <script lang="ts">
-	import { isLoading, notifications, savedImages } from '$lib/stores';
-	import HeaderButtons from '$lib/HeaderButtons.svelte';
-	import { ArchiveIcon } from 'svelte-feather-icons';
 	import '../reset.css';
 	import '../app.scss';
+	import { fade } from 'svelte/transition';
+	import { isLoading, notifications, savedImages, user } from '$lib/stores';
+	import { navigating } from '$app/stores';
+	import HeaderButtons from '$lib/HeaderButtons.svelte';
 	import Notifications from '$lib/Notifications.svelte';
-	import Badge from '$lib/Badge.svelte';
-	import Inbox from '$lib/icons/Inbox.svelte';
+	import Header from '$lib/components/organisms/Header.svelte';
+	import Footer from '$lib/components/organisms/Footer.svelte';
+	import ProgressBarIndicator from '$lib/components/molecules/ProgressBarIndicator.svelte';
 
 	export let path: string;
+
+	$: console.log($navigating);
 </script>
 
 <!--
@@ -27,40 +31,30 @@
 	<link rel="preload" href="/fonts/FernVariable-Roman-VF.woff2" as="font" type="font/woff2" />
 </svelte:head> -->
 
+{#if $navigating?.to.path.includes('/culture/') || $navigating?.to.path.includes('/artist/')}
+	<div out:fade>
+		<ProgressBarIndicator complete={$navigating ? true : false} />
+	</div>
+{/if}
+
 {#if $notifications.length}
 	<Notifications />
 {/if}
+
 <main>
 	<div class="container flow">
-		<header class="header">
-			<h1><a href="/">met explorer</a></h1>
-			<div class="counter--mobile">
-				<a href="/saved">
-					<Inbox size="1.3em" fill={path === '/saved' ? 'var(--button-active)' : 'none'} /><Badge
-						count={$savedImages.length}
-					/></a
-				>
-			</div>
-		</header>
-		{#if $savedImages.length}
-			<div class="counter--desktop">
-				<a href="/saved"
-					><ArchiveIcon size=".75x" /> <span>{$savedImages.length}</span> saved image{$savedImages.length >
-					1
-						? 's'
-						: ''}
-				</a>
-			</div>
-		{/if}
+		<Header {path} />
+
 		<HeaderButtons
 			on:loadingImage={() => ($isLoading = true)}
 			on:imageLoaded={() => ($isLoading = false)}
 		/>
 		<slot />
 	</div>
-	<noscript> Please enable Javascript to use this app. </noscript>
+	<!-- <noscript> Please enable Javascript to use this app. </noscript> -->
 </main>
 
+<!-- <Footer /> -->
 <style lang="scss">
 	main {
 		padding: 1em 1em 2em;

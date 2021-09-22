@@ -1,115 +1,61 @@
 <script context="module">
 	export const prerender = true;
 	export async function load({ page, fetch, session, context }) {
+		//svelte automatically decodes our url, so we have to encode it again
+		const res = await fetch(`/artist/${page.params.name}.json`);
+		if (res.ok) {
+			const images = await res.json();
+			return {
+				props: {
+					name: page.params.name,
+					images
+				},
+				maxage: 60 * 60 * 60 * 24 * 30
+			};
+		}
 		return {
 			props: {
 				name: page.params.name
-			}
+			},
+			status: res.status,
+			error: new Error(`Could not load /artist/${page.params.name}.json`)
 		};
 	}
 </script>
 
 <script lang="ts">
-	import { artistStore } from '$lib/stores';
-	import { onMount } from 'svelte';
-	import '$lib/scss/utilities/auto-grid.scss';
-	export let name;
-	// import getUnicodeFlagIcon from 'country-flag-icons/unicode/index.js';
-	// import { country_to_code, nationality_to_code } from '$lib/countries';
-	import { search } from '$lib/met-api';
 	import type { MetObject } from '$lib/types';
+	import '$lib/scss/utilities/auto-grid.scss';
 
-	let artist = $artistStore.get(name);
-	let loading = true;
+	export let name;
+	export let images;
+	// how do i fix this nonsense??
+	images = images.images as MetObject[];
 
-	let page = 0;
-	let worksIds: number[];
-	let works: MetObject[] = [];
 	let hasMore = false;
 	let index = 0;
-
-	// const countryCode =
-	// 	nationality_to_code[artist?.nationality] || country_to_code[artist?.nationality];
-
-	const fetchData = async (id: number) => {
-		const res = await fetch(
-			`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`
-		);
-		if (res.ok) {
-			const json: MetObject = await res.json();
-			console.log(json);
-			if (json.artistDisplayName !== artist?.name) {
-				console.log(`Skipping image. ${json.artistDisplayName} != ${artist?.name}`);
-				return;
-			} else if (!json.primaryImageSmall) {
-				console.log(`Skipping image. No primary image.`);
-				return;
-			}
-			return json;
-		} else {
-			console.error(`Failed to load image: ${id}`);
-		}
-	};
-
-	const loadMore = async () => {
-		worksIds.slice(index, index + 50).forEach(async (id) => {
-			const res = await fetchData(id);
-			if (res) works = [...works, res];
-		});
-		index += 50;
-		if (worksIds.length > index - 1) {
-			hasMore = true;
-		} else {
-			hasMore = false;
-		}
-	};
-
-	onMount(async () => {
-		// get works from api, save to store/cache for later use
-		const results = await search({
-			q: artist?.name || name,
-			artistOrCulture: true
-		});
-		worksIds = results.objectIDs;
-		console.log(worksIds);
-		// load the first batch of works
-		worksIds.slice(0, 50).forEach(async (id) => {
-			const res = await fetchData(id);
-			if (res) works = [...works, res];
-		});
-		index = 50;
-		if (worksIds.length > index - 1) hasMore = true;
-		loading = false;
-	});
 </script>
 
-<!-- TODO: add highlights section -->
-
 <div class="flow">
-	{#if artist}
-		<h2>{artist?.name || name}</h2>
-		{#if artist?.nationality}
+	<h2>{name}</h2>
+	{#if images}
+		{#if images[0]?.artistNationality}
 			<p>
 				<!-- <span class="country">
 					{countryCode && `${getUnicodeFlagIcon(countryCode) || ''}`}
 				</span> -->
-				{artist?.nationality}
+				{images[0]?.artistNationality}
 			</p>
 		{/if}
-		{#if artist?.birth || artist?.death}
+		{#if images[0]?.artistBeginDate || images[0]?.artistEndDate}
 			<p>
-				{artist?.birth || '??'} — {artist?.death || '??'}
+				{images[0]?.birth || '??'} — {images[0]?.death || '??'}
 			</p>
 		{/if}
-		<!-- {#if artist?.bio}
-			<p class="bio">
-				{artist?.bio}
-			</p>
-		{/if} -->
-		{#if works.length}
+		{#if images.length}
 			<h3>Works</h3>
 			<ul class="auto-grid" role="list">
-				{#each works as image}
+				{#each images as image}
 					<!-- {image} -->
 					<li>
 						<a href="/{image.objectID}">
@@ -132,13 +78,9 @@
 			{#if hasMore}
 				<button on:click={loadMore}>Load more</button>
 			{/if}
-		{:else if loading}
-			<p>Loading...</p>
-		{:else if !loading && (!works || works.length === 0)}
-			<p>No works found</p>
+		{:else}
+			<p>No info found on this artist.</p>
 		{/if}
-	{:else}
-		<p>Artist has not been indexed yet.</p>
 	{/if}
 </div>
 

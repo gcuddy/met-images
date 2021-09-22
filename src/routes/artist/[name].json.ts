@@ -2,15 +2,13 @@ import { search } from '$lib/_api';
 import type { MetObject } from '$lib/types';
 import type { EndpointOutput } from '@sveltejs/kit';
 
-const fetchData = async (id: number, culture: string) => {
+const fetchData = async (id: number, name: string) => {
 	const res = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
 	if (res.ok) {
 		const json: MetObject = await res.json();
-		if (json.culture !== culture) {
-			// console.log(`Skipping image. ${json.culture} != ${culture}`);
+		if (json.artistDisplayName !== name) {
 			return;
 		} else if (!json.primaryImageSmall) {
-			// console.log(`Skipping image. No primary image.`);
 			return;
 		}
 		return json;
@@ -20,21 +18,22 @@ const fetchData = async (id: number, culture: string) => {
 };
 
 export async function get({ params }): Promise<EndpointOutput> {
-	const { culture } = params;
+	const { name } = params;
 	const results = await search({
-		q: culture,
-		artistOrCulture: true,
-		isHighlight: true
+		q: name,
+		artistOrCulture: true
 	});
+	// 50 results for now
 	console.log(results);
 	if (!results.objectIDs) {
-		console.log('no results');
 		return;
 	}
-	// 50 results for now
 	const filteredResults = results.objectIDs.slice(0, 50);
-	const highlights = filteredResults.map(async (id) => {
-		const json = await fetchData(id, culture);
+	const rest = results.objectIDs.slice(50);
+	let hasMore = false;
+	if (rest.length) hasMore = true;
+	const imagePromises = filteredResults.map(async (id) => {
+		const json = await fetchData(id, name);
 		return json;
 		// this fixes the type issue but i don't want to do it
 		return {
@@ -44,20 +43,12 @@ export async function get({ params }): Promise<EndpointOutput> {
 			department: json?.department
 		};
 	});
-	const allHighlights = await Promise.all(highlights);
-	allHighlights.filter((f) => f);
-	// filteredResults.forEach(async (id) => {
-	// 	const res = await fetchData(id, culture);
-	// 	if (res) {
-	// 		highlights = [...highlights, res];
-	// 	}
-	// });
-
+	const images = await Promise.all(imagePromises);
 	// don't know what's up with this type issue
-	if (allHighlights) {
+	if (images) {
 		return {
 			body: {
-				highlights: allHighlights.filter((f) => f)
+				images: images.filter((i) => i)
 			}
 		};
 	}

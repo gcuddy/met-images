@@ -15,6 +15,8 @@ if (browser) {
 	savedImages.subscribe((val) => localStorage.setItem('saved-images', JSON.stringify(val)));
 }
 
+export const filteredImages = writable<MetObject[]>([]);
+
 export const options = writable(DEFAULT_OPTIONS);
 
 export const currentImage = writable<MetObject>(null);
@@ -70,3 +72,13 @@ function notificationStore() {
 export const notifications = notificationStore();
 
 export const departmentChange = writable(false);
+
+interface CacheEntry {
+	id: string;
+	expires: number;
+}
+export const cache = writable<Map<string, MetObject>>(new Map());
+
+export const activeSavedItem = writable<HTMLElement>(null);
+
+export const user = writable(null);

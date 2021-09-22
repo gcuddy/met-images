@@ -9,13 +9,41 @@
 	export let filteredImages: MetObject[];
 	let clicked = false;
 	let button: HTMLButtonElement;
+	let filterModal: HTMLElement;
+
+	const meta = {
+		onView: {
+			text: 'On View',
+			checked: false,
+			items: []
+		},
+		isHighlight: {
+			text: 'Is Highlight',
+			checked: false,
+			items: []
+		}
+	};
 
 	$: departments = [...new Set(filteredImages.map((i) => i.department))];
 
+	$: meta.onView.items = filteredImages.filter((i) => i.GalleryNumber);
+	$: meta.isHighlight.items = filteredImages.filter((i) => i.isHighlight);
 	//todo: trap focus when open, restore focus when closed
 	// $: if (showFilter) button && button.focus();
 
 	export let selectedDepartments = [];
+
+	export let filteredIds: number[];
+
+	$: filteredIds = Array.from(
+		new Set(
+			filteredImages
+				.filter((i) => selectedDepartments?.includes(i.department))
+				.concat(meta.onView.checked ? meta.onView.items : [])
+				.concat(meta.isHighlight.checked ? meta.isHighlight.items : [])
+				.map((i) => i.objectID)
+		)
+	);
 
 	const handleKeydown = (e: KeyboardEvent) => {
 		// make escape key close filter
@@ -27,17 +55,22 @@
 		}
 	};
 
-	function handleClick(department: string) {
-		console.log(department);
-		if (!clicked) {
-			filteredImages = filteredImages.filter((i) => i.department === department);
-			clicked = true;
-		} else {
-			filteredImages = $savedImages.slice();
-			clicked = false;
-		}
-		console.log(filteredImages);
-	}
+	// function setUpFocus() {
+	// 	if (!filterModal) return;
+	// 	const inputs = filterModal.querySelectorAll('input');
+	// 	inputs[0].focus();
+	// }
+	// refactor to use same focus controller as saved
+	// function handleFocus(e: FocusEvent) {
+	// 	const inputs = filterModal.querySelectorAll('input');
+	// 	inputs.forEach((input) => {
+	// 		if (input) {
+	// 			input.tabIndex = -1;
+	// 		}
+	// 	});
+	// 	const target = e.target as HTMLElement;
+	// 	target.tabIndex = 0;
+	// }
 </script>
 
 <!-- TODO: proper keyboard nav -->
@@ -65,24 +98,30 @@
 		></button
 	>
 	{#if showFilter}
-		<div class="filter-options" transition:fly>
-			{#each departments as department}
-				<label class="filter-option">
-					<input type="checkbox" bind:group={selectedDepartments} value={department} />
-					{department}
-				</label>
-			{/each}
+		<div class="filter-options flow" transition:fly bind:this={filterModal}>
+			<div class="meta">
+				{#each Object.keys(meta) as key}
+					{#if meta[key].items.length}
+						<div class="filter-option">
+							<label>
+								<input type="checkbox" bind:checked={meta[key].checked} />
+								<span>{meta[key].text}</span>
+							</label>
+						</div>
+					{/if}
+				{/each}
+			</div>
+			<div class="departments">
+				<h3>Departments</h3>
+				{#each departments as department}
+					<label class="filter-option">
+						<input type="checkbox" bind:group={selectedDepartments} value={department} />
+						{department}
+					</label>
+				{/each}
+			</div>
 		</div>
 	{/if}
-	<!-- {#if showFilter}
-		<div class="filter-options" transition:blur>
-			{#each departments as department}
-				<button class="filter-option" on:click={() => handleClick(department)}>
-					{department}
-				</button>
-			{/each}
-		</div>
-	{/if} -->
 </div>
 
 <style lang="scss">
@@ -104,27 +143,35 @@
 	.filter-options {
 		position: absolute;
 		right: 2rem;
-		display: flex;
-		flex-direction: column;
 		width: max(15em, 100%);
 		// flex-wrap: wrap;
 		background: rgba(220, 220, 220, 0.6);
 		padding: 1rem;
 		border-radius: 1rem;
-		gap: 0.25rem;
 		z-index: 99;
-		-webkit-backdrop-filter: blur(6px);
-		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
 		color: var(--text);
+		> div {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+			background-color: transparent;
+		}
+	}
+	.departments {
+		h3 {
+			font-size: var(--step--1);
+			text-transform: lowercase;
+			+ * {
+				margin-top: 0.5rem;
+			}
+		}
 	}
 	.filter-option {
 		font-size: var(--step--2);
 	}
-	.filter-background {
-		position: fixed;
-		right: 0;
-		bottom: 0;
-		top: 0;
-		left: 0;
+	.meta {
+		color: var(--met-red);
 	}
 </style>
