@@ -2,6 +2,7 @@
 	// export const prerender = true;
 	export async function load({ page, fetch, session, context }) {
 		const res = await fetch(`/${page.params.id}.json`);
+		console.log(res);
 		const image = await res.json();
 		if (res.ok) {
 			return {

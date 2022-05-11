@@ -5,7 +5,7 @@
 	$: console.log($notifications);
 </script>
 
-<div class="notifications-container">
+<div class="notifications-container flow">
 	{#each $notifications as notification (notification.id)}
 		<div animate:flip transition:fade class="notification">
 			<p>{notification.message}</p>
@@ -13,14 +13,17 @@
 	{/each}
 </div>
 
-<style>
+<style lang="scss">
+	@import './components/mixins';
 	.notifications-container {
+		--flow-space: 0.25em;
 		position: fixed;
 		top: var(--space-3xs-2xs);
 		left: var(--space-3xs-2xs);
 		z-index: 999;
 	}
 	.notification {
+		@include shadow('sm');
 		padding: var(--space-xs);
 		background-color: #f44336;
 		border-radius: 0.5rem;
