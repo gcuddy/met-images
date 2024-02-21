@@ -15,7 +15,8 @@ Explore pages for Culture and Artist:
 
 ## Technologies
 
-- Sveltekit
+- Javscript
+- Sveltekit (pre 1.0)
 - SASS
 - API spelunking
 
