@@ -12,6 +12,13 @@ Explore pages for Culture and Artist:
 
 ![202402211217 Arc - The Full Moon at the Time of the Imo Harvest - Met Explorer screenshot 2](https://github.com/gcuddy/met-images/assets/24555627/da7b6d92-4128-44a8-87fb-42d3c2086e1d)
 
+
+## Technologies
+
+- Sveltekit
+- SASS
+- API spelunking
+
 ## Typography
 
 This project uses two of my favorite fonts from David Jonathan Ross, both used on mini-licenses from his Font of the Month Club:
