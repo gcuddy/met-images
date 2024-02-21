@@ -1,38 +1,21 @@
-# create-svelte
+# Met Explorer
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte);
+Get a random image from the Met collection, optionally filtered by Department
+![202402211215 Arc - Saint Lucy and Her Mother at the Shrine of Saint Agatha Saint Lucy Giving Alms Saint Lucy before Paschasius Saint Lucy Resisting Efforts to Move Her - Met Explorer screenshot](https://github.com/gcuddy/met-images/assets/24555627/be0aa9cd-7a65-43b0-a45b-5ec0253990f3)
 
-## Creating a project
 
-If you're seeing this, you've probably already done this step. Congrats!
+Save (and download) images, search and filter, and see what's currently On View at the museum:
+![202402211216 Arc - Saved Items (6) - Met Explorer screenshot](https://github.com/gcuddy/met-images/assets/24555627/be49dc6e-1926-463b-a090-dcc311e1a476)
 
-```bash
-# create a new project in the current directory
-npm init svelte@next
+Explore pages for Culture and Artist:
+![202402211217 Arc - The Full Moon at the Time of the Imo Harvest - Met Explorer screenshot](https://github.com/gcuddy/met-images/assets/24555627/aae0ae38-3205-4661-9f1a-e2eacda6e89b)
 
-# create a new project in my-app
-npm init svelte@next my-app
-```
+![202402211217 Arc - The Full Moon at the Time of the Imo Harvest - Met Explorer screenshot 2](https://github.com/gcuddy/met-images/assets/24555627/da7b6d92-4128-44a8-87fb-42d3c2086e1d)
 
-> Note: the `@next` is temporary
+## Typography
 
-## Developing
+This project uses two of my favorite fonts from David Jonathan Ross, both used on mini-licenses from his Font of the Month Club:
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- headings are typeset in [Pomfret](https://djr.com/notes/pomfret-font-of-the-month)
+- body text is [Fern](https://djr.com/fern)
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-Before creating a production version of your app, install an [adapter](https://kit.svelte.dev/docs#adapters) for your target environment. Then:
-
-```bash
-npm run build
-```
-
-> You can preview the built app with `npm run preview`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production.
